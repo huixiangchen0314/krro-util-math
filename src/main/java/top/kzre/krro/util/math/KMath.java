@@ -576,4 +576,142 @@ public final class KMath {
         return new float[]{x, y, z};
     }
 
+    // ==================== 2D 仿射矩阵（6 元素） ====================
+
+    /**
+     * 返回 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0]。
+     */
+    public static float[] mat2dIdentity() {
+        return new float[]{1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+    }
+
+    /**
+     * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：点乘矩阵为 p' = M * p）。
+     * 变换顺序：先缩放，再旋转，最后平移。
+     *
+     * @param x       平移 X
+     * @param y       平移 Y
+     * @param scaleX  X 轴缩放
+     * @param scaleY  Y 轴缩放
+     * @param rotation 旋转角度（弧度）
+     * @return 6 元素 float[] 矩阵 [a, b, c, d, tx, ty]
+     */
+    public static float[] mat2dCompose(float x, float y,
+                                       float scaleX, float scaleY,
+                                       float rotation) {
+        float cosR = (float) Math.cos(rotation);
+        float sinR = (float) Math.sin(rotation);
+        return new float[]{
+                scaleX * cosR,          // a
+                scaleX * sinR,          // b
+                scaleY * (-sinR),       // c
+                scaleY * cosR,          // d
+                x,                      // tx
+                y                       // ty
+        };
+    }
+
+    /**
+     * 两个 2D 仿射矩阵相乘：result = a * b。
+     * 遵循列向量约定（先应用 b，再应用 a）。
+     *
+     * @param a 左矩阵
+     * @param b 右矩阵
+     * @return 乘积矩阵 (6 元素)
+     * @throws IllegalArgumentException 如果任一数组长度 < 6
+     */
+    public static float[] mat2dMul(float[] a, float[] b) {
+        if (a.length < 6 || b.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        float a1 = a[0], b1 = a[1], c1 = a[2], d1 = a[3], tx1 = a[4], ty1 = a[5];
+        float a2 = b[0], b2 = b[1], c2 = b[2], d2 = b[3], tx2 = b[4], ty2 = b[5];
+        return new float[]{
+                a1 * a2 + c1 * b2,          // a
+                b1 * a2 + d1 * b2,          // b
+                a1 * c2 + c1 * d2,          // c
+                b1 * c2 + d1 * d2,          // d
+                a1 * tx2 + c1 * ty2 + tx1,  // tx
+                b1 * tx2 + d1 * ty2 + ty1   // ty
+        };
+    }
+
+    /**
+     * 计算 2D 仿射矩阵的逆矩阵。
+     * 若矩阵奇异（行列式接近 0），返回 null。
+     *
+     * @param m 6 元素矩阵
+     * @return 逆矩阵，或 null
+     */
+    public static float[] mat2dInvert(float[] m) {
+        if (m.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        float a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
+        double det = (double) a * d - (double) b * c;
+        if (Math.abs(det) < 1e-10) {
+            return null;
+        }
+        double invDet = 1.0 / det;
+        float aInv = (float) (d * invDet);
+        float bInv = (float) (-b * invDet);
+        float cInv = (float) (-c * invDet);
+        float dInv = (float) (a * invDet);
+        float txInv = (float) ((c * ty - d * tx) * invDet);
+        float tyInv = (float) ((b * tx - a * ty) * invDet);
+        return new float[]{aInv, bInv, cInv, dInv, txInv, tyInv};
+    }
+
+    /**
+     * 用 2D 仿射矩阵变换点 (x, y)，返回 [x', y']。
+     *
+     * @param m 6 元素矩阵
+     * @param x 输入 X
+     * @param y 输入 Y
+     * @return 长度为 2 的 float[]，包含变换后的坐标
+     */
+    public static float[] mat2dTransformPoint(float[] m, float x, float y) {
+        if (m.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        float a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
+        return new float[]{
+                a * x + c * y + tx,
+                b * x + d * y + ty
+        };
+    }
+
+    /**
+     * 将 4x4 矩阵（列优先）转换为 2D 仿射矩阵（提取平移、旋转、缩放）。
+     * 仅当 4x4 矩阵仅包含 2D 仿射变换时有效（即第三行/列为 [0,0,1,0] 等）。
+     *
+     * @param m4 16 元素 4x4 列优先矩阵
+     * @return 6 元素仿射矩阵，若无法提取则返回 null
+     */
+    public static float[] mat4ToMat2d(float[] m4) {
+        if (m4.length < 16) return null;
+        // 提取左上 2x2 和第三列平移（列优先）
+        return new float[]{
+                m4[0], m4[1],  // a, b (col0 row0/1)
+                m4[4], m4[5],  // c, d (col1 row0/1)
+                m4[12], m4[13] // tx, ty (col3 row0/1)
+        };
+    }
+
+    /**
+     * 将 2D 仿射矩阵扩展为 4x4 列优先矩阵（z=0，w=1）。
+     */
+    public static float[] mat2dToMat4(float[] m2) {
+        if (m2.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        float a = m2[0], b = m2[1], c = m2[2], d = m2[3], tx = m2[4], ty = m2[5];
+        return new float[]{
+                a, b, 0f, 0f,   // col0
+                c, d, 0f, 0f,   // col1
+                0f, 0f, 1f, 0f, // col2
+                tx, ty, 0f, 1f  // col3
+        };
+    }
+
 }
