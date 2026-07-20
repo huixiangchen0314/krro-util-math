@@ -714,4 +714,32 @@ public final class KMath {
         };
     }
 
+    /**
+     * 构造 2D 仿射变换的逆矩阵（世界 → 本地），
+     * 等效于先构造正变换再求逆，但当缩放为 0 时使用 1e-6 避免除零异常。
+     * 这会产生一个近似的逆矩阵，仅用于避免崩溃，并非数学上精确的逆。
+     *
+     * @param x       平移 X
+     * @param y       平移 Y
+     * @param scaleX  X 轴缩放
+     * @param scaleY  Y 轴缩放
+     * @param rotation 旋转角度（弧度）
+     * @return 6 元素逆矩阵
+     */
+    public static float[] mat2dComposeInverse(float x, float y,
+                                              float scaleX, float scaleY,
+                                              float rotation) {
+        float cosR = (float) Math.cos(rotation);
+        float sinR = (float) Math.sin(rotation);
+        float invSX = 1.0f / (scaleX == 0f ? 1e-6f : scaleX);
+        float invSY = 1.0f / (scaleY == 0f ? 1e-6f : scaleY);
+        return new float[]{
+                cosR * invSX,               // a
+                -sinR * invSY,              // b
+                sinR * invSX,               // c
+                cosR * invSY,               // d
+                -(cosR * x + sinR * y) * invSX,  // tx
+                (sinR * x - cosR * y) * invSY    // ty
+        };
+    }
 }
