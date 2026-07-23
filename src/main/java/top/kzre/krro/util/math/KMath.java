@@ -198,6 +198,11 @@ public final class KMath {
     }
 
 
+    @Deprecated
+    public  static float[] mat4inv(float[] mat){
+        return mat4Inv(mat);
+    }
+
     /**
      * 计算 4x4 矩阵的逆矩阵（列优先存储），使用伴随矩阵 / 行列式公式。
      * 完全基于 float[] 操作，无中间二维数组。
@@ -207,7 +212,7 @@ public final class KMath {
      * @throws IllegalArgumentException 如果输入长度不足 16
      * @throws ArithmeticException     如果矩阵奇异（行列式接近零）
      */
-    public static float[] mat4inv(float[] mat) {
+    public static float[] mat4Inv(float[] mat) {
         if (mat.length < 16) {
             throw new IllegalArgumentException("矩阵长度必须至少为 16");
         }
@@ -429,6 +434,133 @@ public final class KMath {
             }
         }
         return result;
+    }
+
+    /**
+     * 构建一个透视投影矩阵（列优先），右手坐标系，相机看向 -Z。
+     *
+     * @param fovDeg 视野角度（度数）
+     * @param aspect 宽高比（width / height）
+     * @param near   近平面距离（正数）
+     * @param far    远平面距离（正数）
+     * @return 列优先投影矩阵 float[16]
+     */
+    public static float[] perspective(float fovDeg, float aspect, float near, float far) {
+        float f = 1.0f / (float) Math.tan(Math.toRadians(fovDeg) * 0.5f);
+        float nf = 1.0f / (near - far);
+        float[] m = new float[16];
+        m[0] = f / aspect;
+        m[1] = 0.0f;
+        m[2] = 0.0f;
+        m[3] = 0.0f;
+
+        m[4] = 0.0f;
+        m[5] = f;
+        m[6] = 0.0f;
+        m[7] = 0.0f;
+
+        m[8] = 0.0f;
+        m[9] = 0.0f;
+        m[10] = (far + near) * nf;
+        m[11] = -1.0f;
+
+        m[12] = 0.0f;
+        m[13] = 0.0f;
+        m[14] = (2.0f * far * near) * nf;
+        m[15] = 0.0f;
+        return m;
+    }
+
+    /**
+     * 构建一个正交投影矩阵（列优先），常用于平行投影。
+     *
+     * @param left   左平面 x 坐标
+     * @param right  右平面 x 坐标
+     * @param bottom 底平面 y 坐标
+     * @param top    顶平面 y 坐标
+     * @param near   近平面距离（正数）
+     * @param far    远平面距离（正数）
+     * @return 列优先正交投影矩阵 float[16]
+     */
+    public static float[] ortho(float left, float right, float bottom, float top, float near, float far) {
+        float[] m = new float[16];
+        m[0] = 2.0f / (right - left);
+        m[1] = 0.0f;
+        m[2] = 0.0f;
+        m[3] = 0.0f;
+
+        m[4] = 0.0f;
+        m[5] = 2.0f / (top - bottom);
+        m[6] = 0.0f;
+        m[7] = 0.0f;
+
+        m[8] = 0.0f;
+        m[9] = 0.0f;
+        m[10] = -2.0f / (far - near);
+        m[11] = 0.0f;
+
+        m[12] = -(right + left) / (right - left);
+        m[13] = -(top + bottom) / (top - bottom);
+        m[14] = -(far + near) / (far - near);
+        m[15] = 1.0f;
+        return m;
+    }
+
+    /**
+     * 构建一个视图矩阵（世界空间 → 相机空间），相机位置、目标点、上方向均在世界坐标系中。
+     * 结果矩阵为列优先，右手坐标系，相机看向 -Z。
+     *
+     * @param eyeX, eyeY, eyeZ       相机位置
+     * @param centerX, centerY, centerZ 观察目标点
+     * @param upX, upY, upZ          世界空间的上方向（无需归一化）
+     * @return 列优先视图矩阵 float[16]
+     */
+    public static float[] lookAt(float eyeX, float eyeY, float eyeZ,
+                                 float centerX, float centerY, float centerZ,
+                                 float upX, float upY, float upZ) {
+        // 前向量 f = normalize(center - eye)  → 对应相机局部 -Z
+        float fx = centerX - eyeX;
+        float fy = centerY - eyeY;
+        float fz = centerZ - eyeZ;
+        float fLen = (float) Math.sqrt(fx*fx + fy*fy + fz*fz);
+        if (fLen < 1e-12f) return mat4Identity();
+        fx /= fLen; fy /= fLen; fz /= fLen;
+
+        // 右向量 s = normalize(f × up)
+        float sx = fy * upZ - fz * upY;
+        float sy = fz * upX - fx * upZ;
+        float sz = fx * upY - fy * upX;
+        float sLen = (float) Math.sqrt(sx*sx + sy*sy + sz*sz);
+        if (sLen < 1e-12f) {
+            // up 与 forward 平行，自动选取备用 up
+            // 简单处理：若 forward 接近 ±Y，改用 (1,0,0) 作为 up 重新计算
+            float[] altUp = (Math.abs(fy) > 0.99f) ? new float[]{1f,0f,0f} : new float[]{0f,1f,0f};
+            sx = altUp[1] * fz - altUp[2] * fy;
+            sy = altUp[2] * fx - altUp[0] * fz;
+            sz = altUp[0] * fy - altUp[1] * fx;
+            sLen = (float) Math.sqrt(sx*sx + sy*sy + sz*sz);
+        }
+        sx /= sLen; sy /= sLen; sz /= sLen;
+
+        // 上向量 u = s × f
+        float ux = sy * fz - sz * fy;
+        float uy = sz * fx - sx * fz;
+        float uz = sx * fy - sy * fx;
+
+        // 构建列优先矩阵
+        float[] m = new float[16];
+        // 第一列：s
+        m[0] = sx;  m[1] = ux;  m[2] = -fx; m[3] = 0f;
+        // 第二列：u
+        m[4] = sy;  m[5] = uy;  m[6] = -fy; m[7] = 0f;
+        // 第三列：-f
+        m[8] = sz;  m[9] = uz;  m[10]= -fz; m[11]= 0f;
+        // 第四列：平移 = - (s·eye, u·eye, -f·eye)
+        m[12] = -(sx*eyeX + sy*eyeY + sz*eyeZ);
+        m[13] = -(ux*eyeX + uy*eyeY + uz*eyeZ);
+        m[14] = (fx*eyeX + fy*eyeY + fz*eyeZ);
+        m[15] = 1f;
+        return m;
     }
 
     public static float[] quatMul(float[] q1, float[] q2) {
