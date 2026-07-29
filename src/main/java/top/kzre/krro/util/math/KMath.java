@@ -109,6 +109,46 @@ public final class KMath {
         return deg * (float) Math.PI / 180.0f;
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // double 版本（方法名加 d 后缀）
+    // ═══════════════════════════════════════════════════════════
+
+    public static double mind(double a, double b) { return Math.min(a, b); }
+    public static double mind(double a, double b, double c) { return mind(mind(a, b), c); }
+    public static double maxd(double a, double b) { return Math.max(a, b); }
+    public static double maxd(double a, double b, double c) { return maxd(maxd(a, b), c); }
+
+    public static double clampd(double value, double lo, double hi) {
+        return value < lo ? lo : (Math.min(value, hi));
+    }
+    public static double clamp01d(double value) { return clampd(value, 0.0, 1.0); }
+
+    public static double absd(double a) { return a < 0.0 ? -a : a; }
+
+    public static boolean nearlyEquald(double a, double b) { return nearlyEquald(a, b, 1e-9); }
+    public static boolean nearlyEquald(double a, double b, double eps) { return absd(a - b) <= eps; }
+    public static boolean isNearZerod(double a) { return absd(a) <= 1e-9; }
+
+    public static double lerpd(double a, double b, double t) { return a + (b - a) * t; }
+    public static double smoothstepd(double edge0, double edge1, double x) {
+        double t = clampd((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+        return t * t * (3.0 - 2.0 * t);
+    }
+    public static double mapd(double x, double inMin, double inMax, double outMin, double outMax) {
+        double t = (x - inMin) / (inMax - inMin);
+        return lerpd(outMin, outMax, t);
+    }
+
+    public static double fastInvSqrtd(double x) {
+        long i = Double.doubleToLongBits(x);
+        i = 0x5fe6eb50c7b537a9L - (i >> 1);
+        double y = Double.longBitsToDouble(i);
+        return y * (1.5 - 0.5 * x * y * y);
+    }
+
+    public static double sqrtd(double x) { return Math.sqrt(x); }
+    public static double toDegreesd(double rad) { return rad * 180.0 / Math.PI; }
+    public static double toRadiansd(double deg) { return deg * Math.PI / 180.0; }
 
     /**
      * 返回二维零向量 (0, 0)
