@@ -9,6 +9,107 @@ public final class KMath {
 
     private KMath() {} // 禁止实例化
 
+    // ────────────── 基本比较 ──────────────
+
+    /** 两个 float 的最小值 */
+    public static float min(float a, float b) {
+        return Math.min(a, b);
+    }
+
+    /** 三个 float 的最小值 */
+    public static float min(float a, float b, float c) {
+        return min(min(a, b), c);
+    }
+
+    /** 两个 float 的最大值 */
+    public static float max(float a, float b) {
+        return Math.max(a, b);
+    }
+
+    /** 三个 float 的最大值 */
+    public static float max(float a, float b, float c) {
+        return max(max(a, b), c);
+    }
+
+    /** 将值限制在 [lo, hi] 范围内 */
+    public static float clamp(float value, float lo, float hi) {
+        return value < lo ? lo : (Math.min(value, hi));
+    }
+
+    public static float clamp01(float value) {
+        return clamp(value, 0.0f, 1.0f);
+    }
+
+    /** 取绝对值 */
+    public static float abs(float a) {
+        return a < 0.0f ? -a : a;
+    }
+
+    // ────────────── 近似比较（浮点误差容忍） ──────────────
+
+    /** 两个 float 是否近似相等（默认容差） */
+    public static boolean nearlyEqual(float a, float b) {
+        return nearlyEqual(a, b, 1e-6f);
+    }
+
+    /** 两个 float 是否近似相等（指定容差） */
+    public static boolean nearlyEqual(float a, float b, float eps) {
+        return abs(a - b) <= eps;
+    }
+
+    /** 是否为接近零的值 */
+    public static boolean isNearZero(float a) {
+        return abs(a) <= 1e-6f;
+    }
+
+    // ────────────── 插值与映射 ──────────────
+
+    /** 线性插值 a + (b-a)*t */
+    public static float lerp(float a, float b, float t) {
+        return a + (b - a) * t;
+    }
+
+    /** smoothstep (Hermite 平滑) */
+    public static float smoothstep(float edge0, float edge1, float x) {
+        float t = clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+        return t * t * (3.0f - 2.0f * t);
+    }
+
+    /** 将值从 [inMin, inMax] 映射到 [outMin, outMax] */
+    public static float map(float x, float inMin, float inMax, float outMin, float outMax) {
+        float t = (x - inMin) / (inMax - inMin);
+        return lerp(outMin, outMax, t);
+    }
+
+    // ────────────── 幂与根 ──────────────
+
+    /** 快速倒数平方根（John Carmack 方法，精度约 1%） */
+    public static float fastInvSqrt(float x) {
+        int i = Float.floatToIntBits(x);
+        i = 0x5f3759df - (i >> 1);
+        float y = Float.intBitsToFloat(i);
+        // 一次牛顿迭代提高精度
+        return y * (1.5f - 0.5f * x * y * y);
+    }
+
+    /** 平方根（直接委托 Math，但提供统一入口） */
+    public static float sqrt(float x) {
+        return (float) Math.sqrt(x);
+    }
+
+    // ────────────── 其他实用函数 ──────────────
+
+    /** 将弧度转换为度 */
+    public static float toDegrees(float rad) {
+        return rad * 180.0f / (float) Math.PI;
+    }
+
+    /** 将度转换为弧度 */
+    public static float toRadians(float deg) {
+        return deg * (float) Math.PI / 180.0f;
+    }
+
+
     /**
      * 返回二维零向量 (0, 0)
      */
@@ -775,7 +876,7 @@ public final class KMath {
      * @param m 6 元素矩阵
      * @return 逆矩阵，或 null
      */
-    public static float[] mat2dInvert(float[] m) {
+    public static float[] mat2dInv(float[] m) {
         if (m.length < 6) {
             throw new IllegalArgumentException("矩阵长度必须至少为 6");
         }
