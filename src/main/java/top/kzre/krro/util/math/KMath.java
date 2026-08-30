@@ -858,6 +858,16 @@ public final class KMath {
         return new float[]{1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
     }
 
+    public static boolean mat2dIsIdentity(float[] m) {
+        if (m == null || m.length != 6) return false;
+        return Math.abs(m[0] - 1.0f) < 1e-6f &&
+                Math.abs(m[1]) < 1e-6f &&
+                Math.abs(m[2]) < 1e-6f &&
+                Math.abs(m[3] - 1.0f) < 1e-6f &&
+                Math.abs(m[4]) < 1e-6f &&
+                Math.abs(m[5]) < 1e-6f;
+    }
+
     /**
      * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：点乘矩阵为 p' = M * p）。
      * 变换顺序：先缩放，再旋转，最后平移。
