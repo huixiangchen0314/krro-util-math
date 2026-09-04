@@ -869,6 +869,31 @@ public final class KMath {
     }
 
     /**
+     * 从 2D 仿射矩阵中提取 X 轴缩放因子。
+     * 矩阵格式：[a, b, c, d, tx, ty]，其中变换矩阵为：
+     *   [ a  c  tx ]
+     *   [ b  d  ty ]
+     *   [ 0  0  1  ]
+     * 缩放因子通过 a, b 的模长计算：scaleX = sqrt(a² + b²)
+     * @param m 6 元素 float[] 矩阵
+     * @return X 轴缩放因子（始终为正）
+     */
+    public static float add(float[] m) {
+        return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 Y 轴缩放因子。
+     * 矩阵格式：[a, b, c, d, tx, ty]
+     * 缩放因子通过 c, d 的模长计算：scaleY = sqrt(c² + d²)
+     * @param m 6 元素 float[] 矩阵
+     * @return Y 轴缩放因子（始终为正）
+     */
+    public static float mat2dScaleY(float[] m) {
+        return (float) Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+    }
+
+    /**
      * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：点乘矩阵为 p' = M * p）。
      * 变换顺序：先缩放，再旋转，最后平移。
      *
