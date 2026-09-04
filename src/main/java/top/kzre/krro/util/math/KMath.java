@@ -1064,4 +1064,83 @@ public final class KMath {
                 (sinR * x - cosR * y) * invSY    // ty
         };
     }
+
+    public static class SegmentInterceptionResult{
+        private final boolean intercepted;
+        private final float x;
+        private final float y;
+        private SegmentInterceptionResult(boolean intercepted, float x, float y) {
+            this.intercepted = intercepted;
+            this.x = x;
+            this.y = y;
+        }
+        public static SegmentInterceptionResult hit(float x, float y) {
+            return new SegmentInterceptionResult(true, x, y);
+        }
+        private static final SegmentInterceptionResult MISS = new  SegmentInterceptionResult(false, 0, 0);
+        public static SegmentInterceptionResult miss(){
+            return MISS;
+        }
+
+        public boolean isIntercepted() {
+            return intercepted;
+        }
+
+
+        public float getX() {
+            return x;
+        }
+
+        public float getY() {
+            return y;
+        }
+    }
+
+    public static SegmentInterceptionResult segmentIntersection(float x1, float y1, float x2, float y2,
+                                                                float x3, float y3, float x4, float y4) {
+        float d1 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+        float d2 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1);
+        float d3 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+        float d4 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3);
+
+        // 严格相交：d1 和 d2 异号，d3 和 d4 异号
+        if ((d1 > 0 && d2 < 0 || d1 < 0 && d2 > 0) &&
+                (d3 > 0 && d4 < 0 || d3 < 0 && d4 > 0)) {
+            float t = d1 / (d1 - d2);
+            float x = x1 + t * (x2 - x1);
+            float y = y1 + t * (y2 - y1);
+            return SegmentInterceptionResult.hit(x, y);
+        }
+
+        // 处理共线重叠：检查端点是否在另一条线段上
+        if (Math.abs(d1) < 1e-6f && isPointOnSegment(x1, y1, x3, y3, x4, y4)) {
+            return SegmentInterceptionResult.hit(x1, y1);
+        }
+        if (Math.abs(d2) < 1e-6f && isPointOnSegment(x2, y2, x3, y3, x4, y4)) {
+            return SegmentInterceptionResult.hit(x2, y2);
+        }
+        if (Math.abs(d3) < 1e-6f && isPointOnSegment(x3, y3, x1, y1, x2, y2)) {
+            return SegmentInterceptionResult.hit(x3, y3);
+        }
+        if (Math.abs(d4) < 1e-6f && isPointOnSegment(x4, y4, x1, y1, x2, y2)) {
+            return SegmentInterceptionResult.hit(x4, y4);
+        }
+
+        return SegmentInterceptionResult.miss();
+    }
+
+    public static boolean isPointOnSegment(float px, float py,
+                                           float ax, float ay,
+                                           float bx, float by) {
+        float dx = bx - ax;
+        float dy = by - ay;
+        float len2 = dx*dx + dy*dy;
+        if (len2 < 1e-12f) {
+            return Math.abs(px - ax) < 1e-6f && Math.abs(py - ay) < 1e-6f;
+        }
+        float t = ((px - ax)*dx + (py - ay)*dy) / len2;
+        return t >= 0 && t <= 1 &&
+                Math.abs((px - ax) - t*dx) < 1e-6f &&
+                Math.abs((py - ay) - t*dy) < 1e-6f;
+    }
 }
