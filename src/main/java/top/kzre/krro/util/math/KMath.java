@@ -1143,4 +1143,89 @@ public final class KMath {
                 Math.abs((px - ax) - t*dx) < 1e-6f &&
                 Math.abs((py - ay) - t*dy) < 1e-6f;
     }
+
+
+    public static class SegmentInterceptionResultD {
+        private final boolean intercepted;
+        private final double x;
+        private final double y;
+
+        private SegmentInterceptionResultD(boolean intercepted, double x, double y) {
+            this.intercepted = intercepted;
+            this.x = x;
+            this.y = y;
+        }
+
+        public static SegmentInterceptionResultD hit(double x, double y) {
+            return new SegmentInterceptionResultD(true, x, y);
+        }
+
+        private static final SegmentInterceptionResultD MISS =
+                new SegmentInterceptionResultD(false, 0, 0);
+
+        public static SegmentInterceptionResultD miss() {
+            return MISS;
+        }
+
+        public boolean isIntercepted() {
+            return intercepted;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+    }
+
+    public static SegmentInterceptionResultD segmentIntersectionD(
+            double x1, double y1, double x2, double y2,
+            double x3, double y3, double x4, double y4) {
+        double d1 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+        double d2 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1);
+        double d3 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+        double d4 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3);
+
+        // 严格相交：d1 和 d2 异号，d3 和 d4 异号
+        if ((d1 > 0 && d2 < 0 || d1 < 0 && d2 > 0) &&
+                (d3 > 0 && d4 < 0 || d3 < 0 && d4 > 0)) {
+            double t = d1 / (d1 - d2);
+            double x = x1 + t * (x2 - x1);
+            double y = y1 + t * (y2 - y1);
+            return SegmentInterceptionResultD.hit(x, y);
+        }
+
+        // 共线重叠：端点落在另一条线段上
+        if (Math.abs(d1) < 1e-12 && isPointOnSegmentD(x1, y1, x3, y3, x4, y4)) {
+            return SegmentInterceptionResultD.hit(x1, y1);
+        }
+        if (Math.abs(d2) < 1e-12 && isPointOnSegmentD(x2, y2, x3, y3, x4, y4)) {
+            return SegmentInterceptionResultD.hit(x2, y2);
+        }
+        if (Math.abs(d3) < 1e-12 && isPointOnSegmentD(x3, y3, x1, y1, x2, y2)) {
+            return SegmentInterceptionResultD.hit(x3, y3);
+        }
+        if (Math.abs(d4) < 1e-12 && isPointOnSegmentD(x4, y4, x1, y1, x2, y2)) {
+            return SegmentInterceptionResultD.hit(x4, y4);
+        }
+
+        return SegmentInterceptionResultD.miss();
+    }
+
+    public static boolean isPointOnSegmentD(double px, double py,
+                                            double ax, double ay,
+                                            double bx, double by) {
+        double dx = bx - ax;
+        double dy = by - ay;
+        double len2 = dx * dx + dy * dy;
+        if (len2 < 1e-24) {
+            return Math.abs(px - ax) < 1e-12 && Math.abs(py - ay) < 1e-12;
+        }
+        double t = ((px - ax) * dx + (py - ay) * dy) / len2;
+        return t >= 0 && t <= 1
+                && Math.abs((px - ax) - t * dx) < 1e-12
+                && Math.abs((py - ay) - t * dy) < 1e-12;
+    }
 }
