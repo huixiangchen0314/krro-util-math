@@ -1,9 +1,12 @@
 package top.kzre.krro.util.math;
 
-import top.kzre.krro.util.pool.FloatsPools;
+import top.kzre.krro.util.pool.*;
 
 /**
  * Krro 数学工具类，不做类型抽象，约定float[] 布局.
+ *
+ * <p>double 版本方法统一使用大写 {@code D} 后缀（如 {@code minD} / {@code lerpD}）。
+ * 旧的小写 {@code d} 后缀方法已标记 {@link Deprecated}，仅作兼容保留。
  */
 public final class KMath {
 
@@ -110,45 +113,110 @@ public final class KMath {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // double 版本（方法名加 d 后缀）
+    // double 版本（方法名加 D 后缀）
     // ═══════════════════════════════════════════════════════════
 
-    public static double mind(double a, double b) { return Math.min(a, b); }
-    public static double mind(double a, double b, double c) { return mind(mind(a, b), c); }
-    public static double maxd(double a, double b) { return Math.max(a, b); }
-    public static double maxd(double a, double b, double c) { return maxd(maxd(a, b), c); }
+    public static double minD(double a, double b) { return Math.min(a, b); }
+    public static double minD(double a, double b, double c) { return minD(minD(a, b), c); }
+    public static double maxD(double a, double b) { return Math.max(a, b); }
+    public static double maxD(double a, double b, double c) { return maxD(maxD(a, b), c); }
 
-    public static double clampd(double value, double lo, double hi) {
+    public static double clampD(double value, double lo, double hi) {
         return value < lo ? lo : (Math.min(value, hi));
     }
-    public static double clamp01d(double value) { return clampd(value, 0.0, 1.0); }
+    public static double clamp01D(double value) { return clampD(value, 0.0, 1.0); }
 
-    public static double absd(double a) { return a < 0.0 ? -a : a; }
+    public static double absD(double a) { return a < 0.0 ? -a : a; }
 
-    public static boolean nearlyEquald(double a, double b) { return nearlyEquald(a, b, 1e-9); }
-    public static boolean nearlyEquald(double a, double b, double eps) { return absd(a - b) <= eps; }
-    public static boolean isNearZerod(double a) { return absd(a) <= 1e-9; }
+    public static boolean nearlyEqualD(double a, double b) { return nearlyEqualD(a, b, 1e-9); }
+    public static boolean nearlyEqualD(double a, double b, double eps) { return absD(a - b) <= eps; }
+    public static boolean isNearZeroD(double a) { return absD(a) <= 1e-9; }
 
-    public static double lerpd(double a, double b, double t) { return a + (b - a) * t; }
-    public static double smoothstepd(double edge0, double edge1, double x) {
-        double t = clampd((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    public static double lerpD(double a, double b, double t) { return a + (b - a) * t; }
+
+    public static double smoothstepD(double edge0, double edge1, double x) {
+        double t = clampD((x - edge0) / (edge1 - edge0), 0.0, 1.0);
         return t * t * (3.0 - 2.0 * t);
     }
-    public static double mapd(double x, double inMin, double inMax, double outMin, double outMax) {
+
+    public static double mapD(double x, double inMin, double inMax, double outMin, double outMax) {
         double t = (x - inMin) / (inMax - inMin);
-        return lerpd(outMin, outMax, t);
+        return lerpD(outMin, outMax, t);
     }
 
-    public static double fastInvSqrtd(double x) {
+    public static double fastInvSqrtD(double x) {
         long i = Double.doubleToLongBits(x);
         i = 0x5fe6eb50c7b537a9L - (i >> 1);
         double y = Double.longBitsToDouble(i);
         return y * (1.5 - 0.5 * x * y * y);
     }
 
-    public static double sqrtd(double x) { return Math.sqrt(x); }
-    public static double toDegreesd(double rad) { return rad * 180.0 / Math.PI; }
-    public static double toRadiansd(double deg) { return deg * Math.PI / 180.0; }
+    public static double sqrtD(double x) { return Math.sqrt(x); }
+    public static double toDegreesD(double rad) { return rad * 180.0 / Math.PI; }
+    public static double toRadiansD(double deg) { return deg * Math.PI / 180.0; }
+
+    // ═══════════════════════════════════════════════════════════
+    // 旧的小写 d 后缀 —— @Deprecated，仅作兼容
+    // ═══════════════════════════════════════════════════════════
+
+    @Deprecated
+    public static double mind(double a, double b) { return minD(a, b); }
+
+    @Deprecated
+    public static double mind(double a, double b, double c) { return minD(a, b, c); }
+
+    @Deprecated
+    public static double maxd(double a, double b) { return maxD(a, b); }
+
+    @Deprecated
+    public static double maxd(double a, double b, double c) { return maxD(a, b, c); }
+
+    @Deprecated
+    public static double clampd(double value, double lo, double hi) { return clampD(value, lo, hi); }
+
+    @Deprecated
+    public static double clamp01d(double value) { return clamp01D(value); }
+
+    @Deprecated
+    public static double absd(double a) { return absD(a); }
+
+    @Deprecated
+    public static boolean nearlyEquald(double a, double b) { return nearlyEqualD(a, b); }
+
+    @Deprecated
+    public static boolean nearlyEquald(double a, double b, double eps) { return nearlyEqualD(a, b, eps); }
+
+    @Deprecated
+    public static boolean isNearZerod(double a) { return isNearZeroD(a); }
+
+    @Deprecated
+    public static double lerpd(double a, double b, double t) { return lerpD(a, b, t); }
+
+    @Deprecated
+    public static double smoothstepd(double edge0, double edge1, double x) {
+        return smoothstepD(edge0, edge1, x);
+    }
+
+    @Deprecated
+    public static double mapd(double x, double inMin, double inMax, double outMin, double outMax) {
+        return mapD(x, inMin, inMax, outMin, outMax);
+    }
+
+    @Deprecated
+    public static double fastInvSqrtd(double x) { return fastInvSqrtD(x); }
+
+    @Deprecated
+    public static double sqrtd(double x) { return sqrtD(x); }
+
+    @Deprecated
+    public static double toDegreesd(double rad) { return toDegreesD(rad); }
+
+    @Deprecated
+    public static double toRadiansd(double deg) { return toRadiansD(deg); }
+
+    // ═══════════════════════════════════════════════════════════
+    // 向量构造
+    // ═══════════════════════════════════════════════════════════
 
     /**
      * 返回二维零向量 (0, 0)
@@ -192,7 +260,9 @@ public final class KMath {
         return new float[]{x, y, z, w};
     }
 
-    // ==================== 四元数构造 ====================
+    // ═══════════════════════════════════════════════════════════
+    // 四元数构造
+    // ═══════════════════════════════════════════════════════════
 
     /**
      * 返回单位四元数 (0, 0, 0, 1)，表示无旋转
@@ -291,6 +361,10 @@ public final class KMath {
         return new float[]{scalar};
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // 4x4 矩阵（列优先）
+    // ═══════════════════════════════════════════════════════════
+
     /**
      * 构造一个 4x4 矩阵，显式指定 16 个元素（列优先顺序）。
      * <p>
@@ -306,22 +380,6 @@ public final class KMath {
      * </pre>
      * 按列优先存储为 [a00, a10, a20, a30, a01, a11, a21, a31, a02, a12, a22, a32, a03, a13, a23, a33]。
      *
-     * @param m00 第0列第0行
-     * @param m10 第0列第1行
-     * @param m20 第0列第2行
-     * @param m30 第0列第3行
-     * @param m01 第1列第0行
-     * @param m11 第1列第1行
-     * @param m21 第1列第2行
-     * @param m31 第1列第3行
-     * @param m02 第2列第0行
-     * @param m12 第2列第1行
-     * @param m22 第2列第2行
-     * @param m32 第2列第3行
-     * @param m03 第3列第0行
-     * @param m13 第3列第1行
-     * @param m23 第3列第2行
-     * @param m33 第3列第3行
      * @return 包含 16 个 float 的数组（列优先存储）
      */
     public static float[] mat4(
@@ -338,9 +396,8 @@ public final class KMath {
         };
     }
 
-
     @Deprecated
-    public  static float[] mat4inv(float[] mat){
+    public static float[] mat4inv(float[] mat) {
         return mat4Inv(mat);
     }
 
@@ -359,7 +416,9 @@ public final class KMath {
         }
 
         // 从池中借用一个长度为 9 的临时数组（用于 3x3 余子式）
-        float[] minor = FloatsPools.getPool(9).acquire();
+        FloatsHolder holder = PoolManagers.floats().getHolder();
+        FloatsPool pool = holder.getPool(9);
+        float[] minor = pool.acquire();
         try {
             // 计算行列式（按第一行展开）
             float det = 0.0f;
@@ -386,10 +445,9 @@ public final class KMath {
             return inv;
         } finally {
             // 归还临时数组到池中
-            FloatsPools.getPool(9).release(minor);
+            pool.release(minor);
         }
     }
-
 
     /**
      * 计算元素 (row, col) 的代数余子式。
@@ -565,7 +623,6 @@ public final class KMath {
         };
     }
 
-
     public static float[] mat4Transpose(float[] m) {
         if (m.length < 16) throw new IllegalArgumentException("矩阵长度至少16");
         float[] result = new float[16];
@@ -579,12 +636,6 @@ public final class KMath {
 
     /**
      * 构建一个透视投影矩阵（列优先），右手坐标系，相机看向 -Z。
-     *
-     * @param fovDeg 视野角度（度数）
-     * @param aspect 宽高比（width / height）
-     * @param near   近平面距离（正数）
-     * @param far    远平面距离（正数）
-     * @return 列优先投影矩阵 float[16]
      */
     public static float[] perspective(float fovDeg, float aspect, float near, float far) {
         float f = 1.0f / (float) Math.tan(Math.toRadians(fovDeg) * 0.5f);
@@ -613,15 +664,7 @@ public final class KMath {
     }
 
     /**
-     * 构建一个正交投影矩阵（列优先），常用于平行投影。
-     *
-     * @param left   左平面 x 坐标
-     * @param right  右平面 x 坐标
-     * @param bottom 底平面 y 坐标
-     * @param top    顶平面 y 坐标
-     * @param near   近平面距离（正数）
-     * @param far    远平面距离（正数）
-     * @return 列优先正交投影矩阵 float[16]
+     * 构建一个正交投影矩阵（列优先）。
      */
     public static float[] ortho(float left, float right, float bottom, float top, float near, float far) {
         float[] m = new float[16];
@@ -648,13 +691,7 @@ public final class KMath {
     }
 
     /**
-     * 构建一个视图矩阵（世界空间 → 相机空间），相机位置、目标点、上方向均在世界坐标系中。
-     * 结果矩阵为列优先，右手坐标系，相机看向 -Z。
-     *
-     * @param eyeX, eyeY, eyeZ       相机位置
-     * @param centerX, centerY, centerZ 观察目标点
-     * @param upX, upY, upZ          世界空间的上方向（无需归一化）
-     * @return 列优先视图矩阵 float[16]
+     * 构建一个视图矩阵（世界空间 → 相机空间），右手坐标系，相机看向 -Z。
      */
     public static float[] lookAt(float eyeX, float eyeY, float eyeZ,
                                  float centerX, float centerY, float centerZ,
@@ -674,7 +711,6 @@ public final class KMath {
         float sLen = (float) Math.sqrt(sx*sx + sy*sy + sz*sz);
         if (sLen < 1e-12f) {
             // up 与 forward 平行，自动选取备用 up
-            // 简单处理：若 forward 接近 ±Y，改用 (1,0,0) 作为 up 重新计算
             float[] altUp = (Math.abs(fy) > 0.99f) ? new float[]{1f,0f,0f} : new float[]{0f,1f,0f};
             sx = altUp[1] * fz - altUp[2] * fy;
             sy = altUp[2] * fx - altUp[0] * fz;
@@ -690,19 +726,19 @@ public final class KMath {
 
         // 构建列优先矩阵
         float[] m = new float[16];
-        // 第一列：s
         m[0] = sx;  m[1] = ux;  m[2] = -fx; m[3] = 0f;
-        // 第二列：u
         m[4] = sy;  m[5] = uy;  m[6] = -fy; m[7] = 0f;
-        // 第三列：-f
         m[8] = sz;  m[9] = uz;  m[10]= -fz; m[11]= 0f;
-        // 第四列：平移 = - (s·eye, u·eye, -f·eye)
         m[12] = -(sx*eyeX + sy*eyeY + sz*eyeZ);
         m[13] = -(ux*eyeX + uy*eyeY + uz*eyeZ);
         m[14] = (fx*eyeX + fy*eyeY + fz*eyeZ);
         m[15] = 1f;
         return m;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // 四元数运算
+    // ═══════════════════════════════════════════════════════════
 
     public static float[] quatMul(float[] q1, float[] q2) {
         if (q1.length < 4 || q2.length < 4) {
@@ -737,15 +773,12 @@ public final class KMath {
         if (q.length < 4 || v.length < 3) {
             throw new IllegalArgumentException("四元数长度至少4，向量长度至少3");
         }
-        // 使用公式 v' = q * v * q^-1，但优化为直接计算
         float x = v[0], y = v[1], z = v[2];
         float qx = q[0], qy = q[1], qz = q[2], qw = q[3];
-        // 计算临时变量
         float ix = qw * x + qy * z - qz * y;
         float iy = qw * y + qz * x - qx * z;
         float iz = qw * z + qx * y - qy * x;
         float iw = -qx * x - qy * y - qz * z;
-        // 结果 = (i * q^-1) 的向量部分
         float rx = ix * qw + iw * -qx + iy * -qz - iz * -qy;
         float ry = iy * qw + iw * -qy + iz * -qx - ix * -qz;
         float rz = iz * qw + iw * -qz + ix * -qy - iy * -qx;
@@ -756,11 +789,9 @@ public final class KMath {
         if (q1.length < 4 || q2.length < 4) {
             throw new IllegalArgumentException("四元数长度至少4");
         }
-        // 归一化输入（假设已归一化，但安全起见）
         float[] q1n = quatNormalize(q1);
         float[] q2n = quatNormalize(q2);
         float dot = q1n[0]*q2n[0] + q1n[1]*q2n[1] + q1n[2]*q2n[2] + q1n[3]*q2n[3];
-        // 确保最短路径
         if (dot < 0f) {
             q2n = new float[]{-q2n[0], -q2n[1], -q2n[2], -q2n[3]};
             dot = -dot;
@@ -769,7 +800,6 @@ public final class KMath {
         float theta = (float) Math.acos(dot);
         float sinTheta = (float) Math.sin(theta);
         if (sinTheta < 1e-12f) {
-            // 线性插值
             return new float[]{
                     (1f-t)*q1n[0] + t*q2n[0],
                     (1f-t)*q1n[1] + t*q2n[1],
@@ -786,6 +816,10 @@ public final class KMath {
                 w1*q1n[3] + w2*q2n[3]
         };
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // 向量运算
+    // ═══════════════════════════════════════════════════════════
 
     public static float length(float[] v) {
         float sum = 0f;
@@ -812,7 +846,6 @@ public final class KMath {
         return (float) Math.sqrt(sum);
     }
 
-
     public static float[] lerp(float[] a, float[] b, float t) {
         if (a.length != b.length) throw new IllegalArgumentException("向量长度不一致");
         float[] result = new float[a.length];
@@ -821,7 +854,6 @@ public final class KMath {
         }
         return result;
     }
-
 
     public static float[] reflect(float[] v, float[] n) {
         if (v.length < 3 || n.length < 3) {
@@ -837,7 +869,6 @@ public final class KMath {
 
     /**
      * 4x4 矩阵乘以 3D 方向向量（隐式 w=0），返回变换后的方向向量。
-     * 忽略矩阵的平移部分，不执行透视除法。
      */
     public static float[] mat4MulDir3(float[] m, float[] v) {
         if (m.length < 16 || v.length < 3) {
@@ -849,7 +880,9 @@ public final class KMath {
         return new float[]{x, y, z};
     }
 
-    // ==================== 2D 仿射矩阵（6 元素） ====================
+    // ═══════════════════════════════════════════════════════════
+    // 2D 仿射矩阵（6 元素）
+    // ═══════════════════════════════════════════════════════════
 
     /**
      * 返回 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0]。
@@ -870,27 +903,17 @@ public final class KMath {
 
     /**
      * 从 2D 仿射矩阵中提取 X 轴缩放因子。
-     * 矩阵格式：[a, b, c, d, tx, ty]，其中变换矩阵为：
-     *   [ a  c  tx ]
-     *   [ b  d  ty ]
-     *   [ 0  0  1  ]
-     * 缩放因子通过 a, b 的模长计算：scaleX = sqrt(a² + b²)
-     * @param m 6 元素 float[] 矩阵
-     * @return X 轴缩放因子（始终为正）
+     *
+     * @deprecated 名字有歧义（与加法无关），已由 {@link #mat2dScaleX} 取代。
      */
+    @Deprecated
     public static float add(float[] m) {
         return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
     }
 
     /**
      * 从 2D 仿射矩阵中提取 X 轴缩放因子。
-     * 矩阵格式：[a, b, c, d, tx, ty]，其中变换矩阵为：
-     *   [ a  c  tx ]
-     *   [ b  d  ty ]
-     *   [ 0  0  1  ]
-     * 缩放因子通过 a, b 的模长计算：scaleX = sqrt(a² + b²)
-     * @param m 6 元素 float[] 矩阵
-     * @return X 轴缩放因子（始终为正）
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
      */
     public static float mat2dScaleX(float[] m) {
         return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
@@ -898,25 +921,15 @@ public final class KMath {
 
     /**
      * 从 2D 仿射矩阵中提取 Y 轴缩放因子。
-     * 矩阵格式：[a, b, c, d, tx, ty]
-     * 缩放因子通过 c, d 的模长计算：scaleY = sqrt(c² + d²)
-     * @param m 6 元素 float[] 矩阵
-     * @return Y 轴缩放因子（始终为正）
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleY = sqrt(c² + d²)
      */
     public static float mat2dScaleY(float[] m) {
         return (float) Math.sqrt(m[2] * m[2] + m[3] * m[3]);
     }
 
     /**
-     * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：点乘矩阵为 p' = M * p）。
+     * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：p' = M * p）。
      * 变换顺序：先缩放，再旋转，最后平移。
-     *
-     * @param x       平移 X
-     * @param y       平移 Y
-     * @param scaleX  X 轴缩放
-     * @param scaleY  Y 轴缩放
-     * @param rotation 旋转角度（弧度）
-     * @return 6 元素 float[] 矩阵 [a, b, c, d, tx, ty]
      */
     public static float[] mat2dCompose(float x, float y,
                                        float scaleX, float scaleY,
@@ -934,13 +947,7 @@ public final class KMath {
     }
 
     /**
-     * 两个 2D 仿射矩阵相乘：result = a * b。
-     * 遵循列向量约定（先应用 b，再应用 a）。
-     *
-     * @param a 左矩阵
-     * @param b 右矩阵
-     * @return 乘积矩阵 (6 元素)
-     * @throws IllegalArgumentException 如果任一数组长度 < 6
+     * 两个 2D 仿射矩阵相乘：result = a * b（列向量约定，先 b 后 a）。
      */
     public static float[] mat2dMul(float[] a, float[] b) {
         if (a.length < 6 || b.length < 6) {
@@ -961,9 +968,6 @@ public final class KMath {
     /**
      * 计算 2D 仿射矩阵的逆矩阵。
      * 若矩阵奇异（行列式接近 0），返回 null。
-     *
-     * @param m 6 元素矩阵
-     * @return 逆矩阵，或 null
      */
     public static float[] mat2dInv(float[] m) {
         if (m.length < 6) {
@@ -986,11 +990,6 @@ public final class KMath {
 
     /**
      * 用 2D 仿射矩阵变换点 (x, y)，返回 [x', y']。
-     *
-     * @param m 6 元素矩阵
-     * @param x 输入 X
-     * @param y 输入 Y
-     * @return 长度为 2 的 float[]，包含变换后的坐标
      */
     public static float[] mat2dTransformPoint(float[] m, float x, float y) {
         if (m.length < 6) {
@@ -1004,19 +1003,14 @@ public final class KMath {
     }
 
     /**
-     * 将 4x4 矩阵（列优先）转换为 2D 仿射矩阵（提取平移、旋转、缩放）。
-     * 仅当 4x4 矩阵仅包含 2D 仿射变换时有效（即第三行/列为 [0,0,1,0] 等）。
-     *
-     * @param m4 16 元素 4x4 列优先矩阵
-     * @return 6 元素仿射矩阵，若无法提取则返回 null
+     * 将 4x4 矩阵（列优先）转换为 2D 仿射矩阵。
      */
     public static float[] mat4ToMat2d(float[] m4) {
         if (m4.length < 16) return null;
-        // 提取左上 2x2 和第三列平移（列优先）
         return new float[]{
-                m4[0], m4[1],  // a, b (col0 row0/1)
-                m4[4], m4[5],  // c, d (col1 row0/1)
-                m4[12], m4[13] // tx, ty (col3 row0/1)
+                m4[0], m4[1],  // a, b
+                m4[4], m4[5],  // c, d
+                m4[12], m4[13] // tx, ty
         };
     }
 
@@ -1029,24 +1023,16 @@ public final class KMath {
         }
         float a = m2[0], b = m2[1], c = m2[2], d = m2[3], tx = m2[4], ty = m2[5];
         return new float[]{
-                a, b, 0f, 0f,   // col0
-                c, d, 0f, 0f,   // col1
-                0f, 0f, 1f, 0f, // col2
-                tx, ty, 0f, 1f  // col3
+                a, b, 0f, 0f,
+                c, d, 0f, 0f,
+                0f, 0f, 1f, 0f,
+                tx, ty, 0f, 1f
         };
     }
 
     /**
-     * 构造 2D 仿射变换的逆矩阵（世界 → 本地），
-     * 等效于先构造正变换再求逆，但当缩放为 0 时使用 1e-6 避免除零异常。
-     * 这会产生一个近似的逆矩阵，仅用于避免崩溃，并非数学上精确的逆。
-     *
-     * @param x       平移 X
-     * @param y       平移 Y
-     * @param scaleX  X 轴缩放
-     * @param scaleY  Y 轴缩放
-     * @param rotation 旋转角度（弧度）
-     * @return 6 元素逆矩阵
+     * 构造 2D 仿射变换的逆矩阵（世界 → 本地）。
+     * 缩放为 0 时使用 1e-6 避免除零异常（近似逆，仅用于避免崩溃）。
      */
     public static float[] mat2dComposeInverse(float x, float y,
                                               float scaleX, float scaleY,
@@ -1056,16 +1042,197 @@ public final class KMath {
         float invSX = 1.0f / (scaleX == 0f ? 1e-6f : scaleX);
         float invSY = 1.0f / (scaleY == 0f ? 1e-6f : scaleY);
         return new float[]{
-                cosR * invSX,               // a
-                -sinR * invSY,              // b
-                sinR * invSX,               // c
-                cosR * invSY,               // d
-                -(cosR * x + sinR * y) * invSX,  // tx
-                (sinR * x - cosR * y) * invSY    // ty
+                cosR * invSX,
+                -sinR * invSY,
+                sinR * invSX,
+                cosR * invSY,
+                -(cosR * x + sinR * y) * invSX,
+                (sinR * x - cosR * y) * invSY
         };
     }
 
-    public static class SegmentInterceptionResult{
+    // ═══════════════════════════════════════════════════════════
+    // 2D 仿射矩阵（6 元素）—— double 版本
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * 返回 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0]（double）。
+     */
+    public static double[] mat2dIdentityD() {
+        return new double[]{1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+    }
+
+    public static boolean mat2dIsIdentityD(double[] m) {
+        if (m == null || m.length != 6) return false;
+        return Math.abs(m[0] - 1.0) < 1e-9 &&
+                Math.abs(m[1]) < 1e-9 &&
+                Math.abs(m[2]) < 1e-9 &&
+                Math.abs(m[3] - 1.0) < 1e-9 &&
+                Math.abs(m[4]) < 1e-9 &&
+                Math.abs(m[5]) < 1e-9;
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 X 轴缩放因子（double）。
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
+     */
+    public static double mat2dScaleXD(double[] m) {
+        return Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 Y 轴缩放因子（double）。
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleY = sqrt(c² + d²)
+     */
+    public static double mat2dScaleYD(double[] m) {
+        return Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+    }
+
+    /**
+     * 从平移、缩放、旋转构造 2D 仿射矩阵（double，列向量约定：p' = M * p）。
+     * 变换顺序：先缩放，再旋转，最后平移。
+     */
+    public static double[] mat2dComposeD(double x, double y,
+                                         double scaleX, double scaleY,
+                                         double rotation) {
+        double cosR = Math.cos(rotation);
+        double sinR = Math.sin(rotation);
+        return new double[]{
+                scaleX * cosR,          // a
+                scaleX * sinR,          // b
+                scaleY * (-sinR),       // c
+                scaleY * cosR,          // d
+                x,                      // tx
+                y                       // ty
+        };
+    }
+
+    /**
+     * 两个 2D 仿射矩阵相乘（double）：result = a * b（列向量约定，先 b 后 a）。
+     */
+    public static double[] mat2dMulD(double[] a, double[] b) {
+        if (a.length < 6 || b.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        double a1 = a[0], b1 = a[1], c1 = a[2], d1 = a[3], tx1 = a[4], ty1 = a[5];
+        double a2 = b[0], b2 = b[1], c2 = b[2], d2 = b[3], tx2 = b[4], ty2 = b[5];
+        return new double[]{
+                a1 * a2 + c1 * b2,          // a
+                b1 * a2 + d1 * b2,          // b
+                a1 * c2 + c1 * d2,          // c
+                b1 * c2 + d1 * d2,          // d
+                a1 * tx2 + c1 * ty2 + tx1,  // tx
+                b1 * tx2 + d1 * ty2 + ty1   // ty
+        };
+    }
+
+    /**
+     * 计算 2D 仿射矩阵的逆矩阵（double）。
+     * 若矩阵奇异（行列式接近 0），返回 null。
+     */
+    public static double[] mat2dInvD(double[] m) {
+        if (m.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        double a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
+        double det = a * d - b * c;
+        if (Math.abs(det) < 1e-18) {
+            return null;
+        }
+        double invDet = 1.0 / det;
+        return new double[]{
+                d  * invDet,                // aInv
+                -b * invDet,                // bInv
+                -c * invDet,                // cInv
+                a  * invDet,                // dInv
+                (c * ty - d * tx) * invDet, // txInv
+                (b * tx - a * ty) * invDet  // tyInv
+        };
+    }
+
+    /**
+     * 用 2D 仿射矩阵变换点 (x, y)，返回 [x', y']（double）。
+     */
+    public static double[] mat2dTransformPointD(double[] m, double x, double y) {
+        if (m.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        double a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
+        return new double[]{
+                a * x + c * y + tx,
+                b * x + d * y + ty
+        };
+    }
+
+    /**
+     * 用 2D 仿射矩阵变换方向向量 (dx, dy)，返回 [dx', dy']（double）。
+     * 忽略平移部分——方向向量不受平移影响。
+     */
+    public static double[] mat2dTransformDirectionD(double[] m, double dx, double dy) {
+        if (m.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        double a = m[0], b = m[1], c = m[2], d = m[3];
+        return new double[]{
+                a * dx + c * dy,
+                b * dx + d * dy
+        };
+    }
+
+    /**
+     * 将 4x4 矩阵（列优先，double）转换为 2D 仿射矩阵。
+     */
+    public static double[] mat4ToMat2dD(double[] m4) {
+        if (m4.length < 16) return null;
+        return new double[]{
+                m4[0], m4[1],  // a, b
+                m4[4], m4[5],  // c, d
+                m4[12], m4[13] // tx, ty
+        };
+    }
+
+    /**
+     * 将 2D 仿射矩阵扩展为 4x4 列优先矩阵（double，z=0，w=1）。
+     */
+    public static double[] mat2dToMat4D(double[] m2) {
+        if (m2.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        double a = m2[0], b = m2[1], c = m2[2], d = m2[3], tx = m2[4], ty = m2[5];
+        return new double[]{
+                a, b, 0.0, 0.0,   // col0
+                c, d, 0.0, 0.0,   // col1
+                0.0, 0.0, 1.0, 0.0, // col2
+                tx, ty, 0.0, 1.0  // col3
+        };
+    }
+
+    /**
+     * 构造 2D 仿射变换的逆矩阵（double，世界 → 本地）。
+     * 缩放为 0 时使用 1e-12 避免除零异常（近似逆，仅用于避免崩溃）。
+     */
+    public static double[] mat2dComposeInverseD(double x, double y,
+                                                double scaleX, double scaleY,
+                                                double rotation) {
+        double cosR = Math.cos(rotation);
+        double sinR = Math.sin(rotation);
+        double invSX = 1.0 / (scaleX == 0.0 ? 1e-12 : scaleX);
+        double invSY = 1.0 / (scaleY == 0.0 ? 1e-12 : scaleY);
+        return new double[]{
+                cosR * invSX,                       // a
+                -sinR * invSY,                      // b
+                sinR * invSX,                       // c
+                cosR * invSY,                       // d
+                -(cosR * x + sinR * y) * invSX,     // tx
+                (sinR * x - cosR * y) * invSY       // ty
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 线段相交
+    // ═══════════════════════════════════════════════════════════
+
+    public static class SegmentInterceptionResult {
         private final boolean intercepted;
         private final float x;
         private final float y;
@@ -1077,20 +1244,16 @@ public final class KMath {
         public static SegmentInterceptionResult hit(float x, float y) {
             return new SegmentInterceptionResult(true, x, y);
         }
-        private static final SegmentInterceptionResult MISS = new  SegmentInterceptionResult(false, 0, 0);
-        public static SegmentInterceptionResult miss(){
+        private static final SegmentInterceptionResult MISS = new SegmentInterceptionResult(false, 0, 0);
+        public static SegmentInterceptionResult miss() {
             return MISS;
         }
-
         public boolean isIntercepted() {
             return intercepted;
         }
-
-
         public float getX() {
             return x;
         }
-
         public float getY() {
             return y;
         }
@@ -1103,7 +1266,6 @@ public final class KMath {
         float d3 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
         float d4 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3);
 
-        // 严格相交：d1 和 d2 异号，d3 和 d4 异号
         if ((d1 > 0 && d2 < 0 || d1 < 0 && d2 > 0) &&
                 (d3 > 0 && d4 < 0 || d3 < 0 && d4 > 0)) {
             float t = d1 / (d1 - d2);
@@ -1112,7 +1274,6 @@ public final class KMath {
             return SegmentInterceptionResult.hit(x, y);
         }
 
-        // 处理共线重叠：检查端点是否在另一条线段上
         if (Math.abs(d1) < 1e-6f && isPointOnSegment(x1, y1, x3, y3, x4, y4)) {
             return SegmentInterceptionResult.hit(x1, y1);
         }
@@ -1143,7 +1304,6 @@ public final class KMath {
                 Math.abs((px - ax) - t*dx) < 1e-6f &&
                 Math.abs((py - ay) - t*dy) < 1e-6f;
     }
-
 
     public static class SegmentInterceptionResultD {
         private final boolean intercepted;
@@ -1188,7 +1348,6 @@ public final class KMath {
         double d3 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
         double d4 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3);
 
-        // 严格相交：d1 和 d2 异号，d3 和 d4 异号
         if ((d1 > 0 && d2 < 0 || d1 < 0 && d2 > 0) &&
                 (d3 > 0 && d4 < 0 || d3 < 0 && d4 > 0)) {
             double t = d1 / (d1 - d2);
@@ -1197,7 +1356,6 @@ public final class KMath {
             return SegmentInterceptionResultD.hit(x, y);
         }
 
-        // 共线重叠：端点落在另一条线段上
         if (Math.abs(d1) < 1e-12 && isPointOnSegmentD(x1, y1, x3, y3, x4, y4)) {
             return SegmentInterceptionResultD.hit(x1, y1);
         }
