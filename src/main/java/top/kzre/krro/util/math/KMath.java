@@ -547,7 +547,7 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4Translate(float tx, float ty, float tz) {
+    public static float[] mat4TranslateMatrix(float tx, float ty, float tz) {
         return new float[]{
                 1f, 0f, 0f, 0f,
                 0f, 1f, 0f, 0f,
@@ -556,7 +556,7 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4Scale(float sx, float sy, float sz) {
+    public static float[] mat4ScaleMatrix(float sx, float sy, float sz) {
         return new float[]{
                 sx, 0f, 0f, 0f,
                 0f, sy, 0f, 0f,
@@ -565,7 +565,7 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4RotateX(float angle) {
+    public static float[] mat4RotateXMatrix(float angle) {
         float c = (float) Math.cos(angle);
         float s = (float) Math.sin(angle);
         return new float[]{
@@ -576,7 +576,7 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4RotateY(float angle) {
+    public static float[] mat4RotateYMatrix(float angle) {
         float c = (float) Math.cos(angle);
         float s = (float) Math.sin(angle);
         return new float[]{
@@ -587,7 +587,7 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4RotateZ(float angle) {
+    public static float[] mat4RotateZMatrix(float angle) {
         float c = (float) Math.cos(angle);
         float s = (float) Math.sin(angle);
         return new float[]{
@@ -598,7 +598,7 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4Rotate(float angle, float[] axis) {
+    public static float[] mat4RotateMatrix(float angle, float[] axis) {
         if (axis.length < 3) {
             throw new IllegalArgumentException("轴向量长度至少为3");
         }
@@ -623,21 +623,10 @@ public final class KMath {
         };
     }
 
-    public static float[] mat4Transpose(float[] m) {
-        if (m.length < 16) throw new IllegalArgumentException("矩阵长度至少16");
-        float[] result = new float[16];
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 4; col++) {
-                result[row * 4 + col] = m[col * 4 + row];
-            }
-        }
-        return result;
-    }
-
     /**
      * 构建一个透视投影矩阵（列优先），右手坐标系，相机看向 -Z。
      */
-    public static float[] perspective(float fovDeg, float aspect, float near, float far) {
+    public static float[] mat4PerspectiveMatrix(float fovDeg, float aspect, float near, float far) {
         float f = 1.0f / (float) Math.tan(Math.toRadians(fovDeg) * 0.5f);
         float nf = 1.0f / (near - far);
         float[] m = new float[16];
@@ -666,7 +655,8 @@ public final class KMath {
     /**
      * 构建一个正交投影矩阵（列优先）。
      */
-    public static float[] ortho(float left, float right, float bottom, float top, float near, float far) {
+    public static float[] mat4OrthoMatrix(float left, float right, float bottom, float top,
+                                          float near, float far) {
         float[] m = new float[16];
         m[0] = 2.0f / (right - left);
         m[1] = 0.0f;
@@ -693,9 +683,9 @@ public final class KMath {
     /**
      * 构建一个视图矩阵（世界空间 → 相机空间），右手坐标系，相机看向 -Z。
      */
-    public static float[] lookAt(float eyeX, float eyeY, float eyeZ,
-                                 float centerX, float centerY, float centerZ,
-                                 float upX, float upY, float upZ) {
+    public static float[] mat4LookAtMatrix(float eyeX, float eyeY, float eyeZ,
+                                           float centerX, float centerY, float centerZ,
+                                           float upX, float upY, float upZ) {
         // 前向量 f = normalize(center - eye)  → 对应相机局部 -Z
         float fx = centerX - eyeX;
         float fy = centerY - eyeY;
@@ -711,7 +701,9 @@ public final class KMath {
         float sLen = (float) Math.sqrt(sx*sx + sy*sy + sz*sz);
         if (sLen < 1e-12f) {
             // up 与 forward 平行，自动选取备用 up
-            float[] altUp = (Math.abs(fy) > 0.99f) ? new float[]{1f,0f,0f} : new float[]{0f,1f,0f};
+            float[] altUp = (Math.abs(fy) > 0.99f)
+                    ? new float[]{1f, 0f, 0f}
+                    : new float[]{0f, 1f, 0f};
             sx = altUp[1] * fz - altUp[2] * fy;
             sy = altUp[2] * fx - altUp[0] * fz;
             sz = altUp[0] * fy - altUp[1] * fx;
@@ -726,15 +718,28 @@ public final class KMath {
 
         // 构建列优先矩阵
         float[] m = new float[16];
-        m[0] = sx;  m[1] = ux;  m[2] = -fx; m[3] = 0f;
-        m[4] = sy;  m[5] = uy;  m[6] = -fy; m[7] = 0f;
-        m[8] = sz;  m[9] = uz;  m[10]= -fz; m[11]= 0f;
+        m[0]  = sx;  m[1]  = ux;  m[2]  = -fx; m[3]  = 0f;
+        m[4]  = sy;  m[5]  = uy;  m[6]  = -fy; m[7]  = 0f;
+        m[8]  = sz;  m[9]  = uz;  m[10] = -fz; m[11] = 0f;
         m[12] = -(sx*eyeX + sy*eyeY + sz*eyeZ);
         m[13] = -(ux*eyeX + uy*eyeY + uz*eyeZ);
         m[14] = (fx*eyeX + fy*eyeY + fz*eyeZ);
         m[15] = 1f;
         return m;
     }
+
+    public static float[] mat4Transpose(float[] m) {
+        if (m.length < 16) throw new IllegalArgumentException("矩阵长度至少16");
+        float[] result = new float[16];
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                result[row * 4 + col] = m[col * 4 + row];
+            }
+        }
+        return result;
+    }
+
+
 
     // ═══════════════════════════════════════════════════════════
     // 四元数运算
@@ -911,6 +916,116 @@ public final class KMath {
         return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // 2D 仿射矩阵 —— 绕点变换（float）
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * 绕 (cx, cy) 旋转 angle 弧度的 2D 仿射矩阵。
+     * 等价于 T(cx, cy) · R(angle) · T(-cx, -cy)。
+     * 布局：[a b c d tx ty]，列向量约定 p' = M · p。
+     */
+    public static float[] mat2dRotateMatrix(float cx, float cy, float angle) {
+        float c = (float) Math.cos(angle);
+        float s = (float) Math.sin(angle);
+        return new float[]{
+                c,  s,  -s, c,
+                cx * (1f - c) + s * cy,
+                cy * (1f - c) - s * cx
+        };
+    }
+
+    /**
+     * 以 (cx, cy) 为中心缩放 (sx, sy) 的 2D 仿射矩阵。
+     */
+    public static float[] mat2dScaleMatrix(float cx, float cy, float sx, float sy) {
+        return new float[]{
+                sx, 0f, 0f, sy,
+                cx * (1f - sx),
+                cy * (1f - sy)
+        };
+    }
+
+    /**
+     * 沿经过 (px, py)、方向 (dx, dy) 的直线镜像的 2D 仿射矩阵。
+     * 方向向量必须非零。
+     */
+    public static float[] mat2dMirrorMatrix(float px, float py, float dx, float dy) {
+        float len = (float) Math.hypot(dx, dy);
+        if (len < 1e-12f) {
+            throw new IllegalArgumentException("mirror axis direction must be non-zero");
+        }
+        float nx = -dy / len;
+        float ny =  dx / len;
+        float a  = 1f - 2f * nx * nx;
+        float b  = -2f * nx * ny;
+        float d  = 1f - 2f * ny * ny;
+        return new float[]{
+                a, b, b, d,
+                px - (a * px + b * py),
+                py - (b * px + d * py)
+        };
+    }
+
+    /**
+     * 以 (cx, cy) 为中心斜切的 2D 仿射矩阵。
+     * kx 影响 Y 位移（y' 受 x 影响），ky 影响 X 位移（x' 受 y 影响）。
+     */
+    public static float[] mat2dSkewMatrix(float cx, float cy, float kx, float ky) {
+        return new float[]{
+                1f, kx, ky, 1f,
+                -ky * cy,
+                -kx * cx
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 2D 仿射矩阵 —— 绕点变换（double）
+    // ═══════════════════════════════════════════════════════════
+
+    public static double[] mat2dRotateMatrixD(double cx, double cy, double angle) {
+        double c = Math.cos(angle);
+        double s = Math.sin(angle);
+        return new double[]{
+                c,  s,  -s, c,
+                cx * (1.0 - c) + s * cy,
+                cy * (1.0 - c) - s * cx
+        };
+    }
+
+    public static double[] mat2dScaleMatrixD(double cx, double cy, double sx, double sy) {
+        return new double[]{
+                sx, 0.0, 0.0, sy,
+                cx * (1.0 - sx),
+                cy * (1.0 - sy)
+        };
+    }
+
+    public static double[] mat2dMirrorMatrixD(double px, double py, double dx, double dy) {
+        double len = Math.hypot(dx, dy);
+        if (len < 1e-12) {
+            throw new IllegalArgumentException("mirror axis direction must be non-zero");
+        }
+        double nx = -dy / len;
+        double ny =  dx / len;
+        double a  = 1.0 - 2.0 * nx * nx;
+        double b  = -2.0 * nx * ny;
+        double d  = 1.0 - 2.0 * ny * ny;
+        return new double[]{
+                a, b, b, d,
+                px - (a * px + b * py),
+                py - (b * px + d * py)
+        };
+    }
+
+    public static double[] mat2dSkewMatrixD(double cx, double cy, double kx, double ky) {
+        return new double[]{
+                1.0, kx, ky, 1.0,
+                -ky * cy,
+                -kx * cx
+        };
+    }
+
     /**
      * 从 2D 仿射矩阵中提取 X 轴缩放因子。
      * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
@@ -1001,6 +1116,7 @@ public final class KMath {
                 b * x + d * y + ty
         };
     }
+
 
     /**
      * 将 4x4 矩阵（列优先）转换为 2D 仿射矩阵。
