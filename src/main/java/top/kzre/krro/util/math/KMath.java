@@ -1539,7 +1539,7 @@ public final class KMath {
      *   L1: P1 + t * d1
      *   L2: P2 + s * d2
      */
-    private LineIntersectionResultD lineIntersectionD(
+    public LineIntersectionResultD lineIntersectionD(
             double px1, double py1, double dx1, double dy1,
             double px2, double py2, double dx2, double dy2) {
         double denom = dx1 * dy2 - dy1 * dx2;
@@ -1588,7 +1588,7 @@ public final class KMath {
      *   L1: P1 + t * d1
      *   L2: P2 + s * d2
      */
-    private LineIntersectionResult lineIntersection(
+    public LineIntersectionResult lineIntersection(
             float px1, float py1, float dx1, float dy1,
             float px2, float py2, float dx2, float dy2) {
         float denom = dx1 * dy2 - dy1 * dx2;
