@@ -1421,30 +1421,30 @@ public final class KMath {
                 Math.abs((py - ay) - t*dy) < 1e-6f;
     }
 
-    public static class SegmentInterceptionResultD {
-        private final boolean intercepted;
+    public static class SegmentIntersectionResultD {
+        private final boolean intersected;
         private final double x;
         private final double y;
 
-        private SegmentInterceptionResultD(boolean intercepted, double x, double y) {
-            this.intercepted = intercepted;
+        private SegmentIntersectionResultD(boolean intersected, double x, double y) {
+            this.intersected = intersected;
             this.x = x;
             this.y = y;
         }
 
-        public static SegmentInterceptionResultD hit(double x, double y) {
-            return new SegmentInterceptionResultD(true, x, y);
+        public static SegmentIntersectionResultD hit(double x, double y) {
+            return new SegmentIntersectionResultD(true, x, y);
         }
 
-        private static final SegmentInterceptionResultD MISS =
-                new SegmentInterceptionResultD(false, 0, 0);
+        private static final SegmentIntersectionResultD MISS =
+                new SegmentIntersectionResultD(false, 0, 0);
 
-        public static SegmentInterceptionResultD miss() {
+        public static SegmentIntersectionResultD miss() {
             return MISS;
         }
 
-        public boolean isIntercepted() {
-            return intercepted;
+        public boolean isIntersected() {
+            return intersected;
         }
 
         public double getX() {
@@ -1456,7 +1456,7 @@ public final class KMath {
         }
     }
 
-    public static SegmentInterceptionResultD segmentIntersectionD(
+    public static SegmentIntersectionResultD segmentIntersectionD(
             double x1, double y1, double x2, double y2,
             double x3, double y3, double x4, double y4) {
         double d1 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
@@ -1469,23 +1469,23 @@ public final class KMath {
             double t = d1 / (d1 - d2);
             double x = x1 + t * (x2 - x1);
             double y = y1 + t * (y2 - y1);
-            return SegmentInterceptionResultD.hit(x, y);
+            return SegmentIntersectionResultD.hit(x, y);
         }
 
         if (Math.abs(d1) < 1e-12 && isPointOnSegmentD(x1, y1, x3, y3, x4, y4)) {
-            return SegmentInterceptionResultD.hit(x1, y1);
+            return SegmentIntersectionResultD.hit(x1, y1);
         }
         if (Math.abs(d2) < 1e-12 && isPointOnSegmentD(x2, y2, x3, y3, x4, y4)) {
-            return SegmentInterceptionResultD.hit(x2, y2);
+            return SegmentIntersectionResultD.hit(x2, y2);
         }
         if (Math.abs(d3) < 1e-12 && isPointOnSegmentD(x3, y3, x1, y1, x2, y2)) {
-            return SegmentInterceptionResultD.hit(x3, y3);
+            return SegmentIntersectionResultD.hit(x3, y3);
         }
         if (Math.abs(d4) < 1e-12 && isPointOnSegmentD(x4, y4, x1, y1, x2, y2)) {
-            return SegmentInterceptionResultD.hit(x4, y4);
+            return SegmentIntersectionResultD.hit(x4, y4);
         }
 
-        return SegmentInterceptionResultD.miss();
+        return SegmentIntersectionResultD.miss();
     }
 
     public static boolean isPointOnSegmentD(double px, double py,
@@ -1501,5 +1501,101 @@ public final class KMath {
         return t >= 0 && t <= 1
                 && Math.abs((px - ax) - t * dx) < 1e-12
                 && Math.abs((py - ay) - t * dy) < 1e-12;
+    }
+
+    public static class LineIntersectionResultD {
+        private final boolean intersected;
+        private final double x;
+        private final double y;
+        private LineIntersectionResultD(boolean intersected, double x1, double y1) {
+            this.intersected = intersected;
+            this.x = x1;
+            this.y = y1;
+        }
+
+        public boolean isIntersected() {
+            return intersected;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public static LineIntersectionResultD hit(double x, double y) {
+            return new LineIntersectionResultD(true, x, y);
+        }
+        private static final LineIntersectionResultD MISS = new LineIntersectionResultD(false, 0, 0);
+        public static LineIntersectionResultD miss() {
+            return MISS;
+        }
+    }
+
+    /**
+     * 两条参数直线求交：
+     *   L1: P1 + t * d1
+     *   L2: P2 + s * d2
+     */
+    private LineIntersectionResultD lineIntersectionD(
+            double px1, double py1, double dx1, double dy1,
+            double px2, double py2, double dx2, double dy2) {
+        double denom = dx1 * dy2 - dy1 * dx2;
+        if (Math.abs(denom) < 1e-12) return LineIntersectionResultD.miss();
+        double t = ((px2 - px1) * dy2 - (py2 - py1) * dx2) / denom;
+        double hitX = px1 + t * dx1;
+        double hitY = py1 + t * dy1;
+        return LineIntersectionResultD.hit(hitX, hitY);
+    }
+
+
+
+    public static class LineIntersectionResult {
+        private final boolean intersected;
+        private final float x;
+        private final float y;
+        private LineIntersectionResult(boolean intersected, float x1, float y1) {
+            this.intersected = intersected;
+            this.x = x1;
+            this.y = y1;
+        }
+
+        public boolean isIntersected() {
+            return intersected;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public static LineIntersectionResult hit(float x, float y) {
+            return new LineIntersectionResult(true, x, y);
+        }
+        private static final LineIntersectionResult MISS = new LineIntersectionResult(false, 0, 0);
+        public static LineIntersectionResult miss() {
+            return MISS;
+        }
+    }
+
+    /**
+     * 两条参数直线求交：
+     *   L1: P1 + t * d1
+     *   L2: P2 + s * d2
+     */
+    private LineIntersectionResult lineIntersection(
+            float px1, float py1, float dx1, float dy1,
+            float px2, float py2, float dx2, float dy2) {
+        float denom = dx1 * dy2 - dy1 * dx2;
+        if (Math.abs(denom) < 1e-12) return LineIntersectionResult.miss();
+        float t = ((px2 - px1) * dy2 - (py2 - py1) * dx2) / denom;
+        float hitX = px1 + t * dx1;
+        float hitY = py1 + t * dy1;
+        return LineIntersectionResult.hit(hitX, hitY);
     }
 }
