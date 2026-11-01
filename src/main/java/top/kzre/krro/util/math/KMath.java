@@ -3,16 +3,38 @@ package top.kzre.krro.util.math;
 import top.kzre.krro.util.pool.*;
 
 /**
- * Krro 数学工具类，不做类型抽象，约定float[] 布局.
+ * Krro 数学工具类，不做类型抽象，约定 float[] 布局.
  *
  * <p>double 版本方法统一使用大写 {@code D} 后缀（如 {@code minD} / {@code lerpD}）。
  * 旧的小写 {@code d} 后缀方法已标记 {@link Deprecated}，仅作兼容保留。
+ *
+ * <p>约定：带 {@code out} 参数的重载包含实际计算逻辑，非 out 重载仅分配结果数组并委托。
  */
 public final class KMath {
 
     private KMath() {} // 禁止实例化
 
-    // ────────────── 基本比较 ──────────────
+    // ═══════════════════════════════════════════════════════════
+    // 内部工具
+    // ═══════════════════════════════════════════════════════════
+
+    private static float[] requireMinLen(float[] arr, int min, String name) {
+        if (arr == null || arr.length < min) {
+            throw new IllegalArgumentException(name + " 长度至少为 " + min);
+        }
+        return arr;
+    }
+
+    private static double[] requireMinLen(double[] arr, int min, String name) {
+        if (arr == null || arr.length < min) {
+            throw new IllegalArgumentException(name + " 长度至少为 " + min);
+        }
+        return arr;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 标量：基本比较
+    // ═══════════════════════════════════════════════════════════
 
     /** 两个 float 的最小值 */
     public static float min(float a, float b) {
@@ -48,7 +70,9 @@ public final class KMath {
         return a < 0.0f ? -a : a;
     }
 
-    // ────────────── 近似比较（浮点误差容忍） ──────────────
+    // ═══════════════════════════════════════════════════════════
+    // 标量：近似比较
+    // ═══════════════════════════════════════════════════════════
 
     /** 两个 float 是否近似相等（默认容差） */
     public static boolean nearlyEqual(float a, float b) {
@@ -65,7 +89,9 @@ public final class KMath {
         return abs(a) <= 1e-6f;
     }
 
-    // ────────────── 插值与映射 ──────────────
+    // ═══════════════════════════════════════════════════════════
+    // 标量：插值与映射
+    // ═══════════════════════════════════════════════════════════
 
     /** 线性插值 a + (b-a)*t */
     public static float lerp(float a, float b, float t) {
@@ -84,7 +110,9 @@ public final class KMath {
         return lerp(outMin, outMax, t);
     }
 
-    // ────────────── 幂与根 ──────────────
+    // ═══════════════════════════════════════════════════════════
+    // 标量：幂与根
+    // ═══════════════════════════════════════════════════════════
 
     /** 快速倒数平方根（John Carmack 方法，精度约 1%） */
     public static float fastInvSqrt(float x) {
@@ -100,7 +128,9 @@ public final class KMath {
         return (float) Math.sqrt(x);
     }
 
-    // ────────────── 其他实用函数 ──────────────
+    // ═══════════════════════════════════════════════════════════
+    // 标量：角度
+    // ═══════════════════════════════════════════════════════════
 
     /** 将弧度转换为度 */
     public static float toDegrees(float rad) {
@@ -113,7 +143,7 @@ public final class KMath {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // double 版本（方法名加 D 后缀）
+    // 标量：double 版本（方法名加 D 后缀）
     // ═══════════════════════════════════════════════════════════
 
     public static double minD(double a, double b) { return Math.min(a, b); }
@@ -156,7 +186,7 @@ public final class KMath {
     public static double toRadiansD(double deg) { return deg * Math.PI / 180.0; }
 
     // ═══════════════════════════════════════════════════════════
-    // 旧的小写 d 后缀 —— @Deprecated，仅作兼容
+    // 标量：旧的小写 d 后缀 —— @Deprecated，仅作兼容
     // ═══════════════════════════════════════════════════════════
 
     @Deprecated
@@ -218,96 +248,61 @@ public final class KMath {
     // 向量构造
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * 返回二维零向量 (0, 0)
-     */
+    /** 返回二维零向量 (0, 0) */
     public static float[] vec2() {
-        return new float[]{0.0f, 0.0f};
+        return vec2(0.0f, 0.0f, new float[2]);
     }
 
-    /**
-     * 构造二维向量 (x, y)
-     */
+    /** 构造二维向量 (x, y) */
     public static float[] vec2(float x, float y) {
-        return new float[]{x, y};
+        return vec2(x, y, new float[2]);
     }
 
-    /**
-     * 返回三维零向量 (0, 0, 0)
-     */
+    public static float[] vec2(float x, float y, float[] out) {
+        requireMinLen(out, 2, "out");
+        out[0] = x; out[1] = y;
+        return out;
+    }
+
+    /** 返回三维零向量 (0, 0, 0) */
     public static float[] vec3() {
-        return new float[]{0.0f, 0.0f, 0.0f};
+        return vec3(0.0f, 0.0f, 0.0f, new float[3]);
     }
 
-    /**
-     * 构造三维向量 (x, y, z)
-     */
+    /** 构造三维向量 (x, y, z) */
     public static float[] vec3(float x, float y, float z) {
-        return new float[]{x, y, z};
+        return vec3(x, y, z, new float[3]);
     }
 
-    /**
-     * 返回四维零向量 (0, 0, 0, 0)
-     */
+    public static float[] vec3(float x, float y, float z, float[] out) {
+        requireMinLen(out, 3, "out");
+        out[0] = x; out[1] = y; out[2] = z;
+        return out;
+    }
+
+    /** 返回四维零向量 (0, 0, 0, 0) */
     public static float[] vec4() {
-        return new float[]{0.0f, 0.0f, 0.0f, 0.0f};
+        return vec4(0.0f, 0.0f, 0.0f, 0.0f, new float[4]);
     }
 
-    /**
-     * 构造四维向量 (x, y, z, w)
-     */
+    /** 构造四维向量 (x, y, z, w) */
     public static float[] vec4(float x, float y, float z, float w) {
-        return new float[]{x, y, z, w};
+        return vec4(x, y, z, w, new float[4]);
+    }
+
+    public static float[] vec4(float x, float y, float z, float w, float[] out) {
+        requireMinLen(out, 4, "out");
+        out[0] = x; out[1] = y; out[2] = z; out[3] = w;
+        return out;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 四元数构造
+    // 向量运算
     // ═══════════════════════════════════════════════════════════
-
-    /**
-     * 返回单位四元数 (0, 0, 0, 1)，表示无旋转
-     */
-    public static float[] quat() {
-        return new float[]{0.0f, 0.0f, 0.0f, 1.0f};
-    }
-
-    /**
-     * 构造四元数 (x, y, z, w)，通常 w 为实部。
-     * 调用者需自行归一化。
-     */
-    public static float[] quat(float x, float y, float z, float w) {
-        return new float[]{x, y, z, w};
-    }
-
-    /**
-     * 从旋转轴和角度构造四元数（轴角表示）。
-     * @param axis  单位旋转轴（三维向量）
-     * @param angle 旋转角度（弧度）
-     * @return 四元数 (x, y, z, w)
-     */
-    public static float[] quatFromAxisAngle(float[] axis, float angle) {
-        if (axis.length < 3) {
-            throw new IllegalArgumentException("轴向量长度至少为 3");
-        }
-        float halfAngle = angle * 0.5f;
-        float sinHalf = (float) Math.sin(halfAngle);
-        float cosHalf = (float) Math.cos(halfAngle);
-        return new float[]{
-                axis[0] * sinHalf,
-                axis[1] * sinHalf,
-                axis[2] * sinHalf,
-                cosHalf
-        };
-    }
 
     /**
      * 计算两个向量的点积（内积）。
      * 支持任意维度，但两个向量长度必须相同。
-     *
-     * @param vec1 第一个向量
-     * @param vec2 第二个向量
-     * @return 点积结果（标量）
-     * @throws IllegalArgumentException 如果向量长度不同
      */
     public static float dot(float[] vec1, float[] vec2) {
         if (vec1.length != vec2.length) {
@@ -322,43 +317,282 @@ public final class KMath {
 
     /**
      * 计算两个三维向量的叉积（外积）。
-     * 返回一个垂直于输入平面的三维向量。
      * 要求两个向量长度至少为 3，取前三个分量参与计算。
-     *
-     * @param vec1 第一个向量（长度 ≥ 3）
-     * @param vec2 第二个向量（长度 ≥ 3）
-     * @return 三维向量 [x, y, z] 表示叉积结果
-     * @throws IllegalArgumentException 如果任一向量长度小于 3
      */
     public static float[] cross(float[] vec1, float[] vec2) {
-        if (vec1.length < 3 || vec2.length < 3) {
-            throw new IllegalArgumentException("叉积要求向量长度至少为 3，但收到 " + vec1.length + " 和 " + vec2.length);
+        return cross(vec1, vec2, new float[3]);
+    }
+
+    public static float[] cross(float[] v1, float[] v2, float[] out) {
+        if (v1.length < 3 || v2.length < 3) {
+            throw new IllegalArgumentException("叉积要求向量长度至少为 3");
         }
-        float x1 = vec1[0], y1 = vec1[1], z1 = vec1[2];
-        float x2 = vec2[0], y2 = vec2[1], z2 = vec2[2];
-        return new float[]{
-                y1 * z2 - z1 * y2,
-                z1 * x2 - x1 * z2,
-                x1 * y2 - y1 * x2
-        };
+        requireMinLen(out, 3, "out");
+        float x1 = v1[0], y1 = v1[1], z1 = v1[2];
+        float x2 = v2[0], y2 = v2[1], z2 = v2[2];
+        out[0] = y1 * z2 - z1 * y2;
+        out[1] = z1 * x2 - x1 * z2;
+        out[2] = x1 * y2 - y1 * x2;
+        return out;
     }
 
     /**
      * 计算两个二维向量的叉积（标量值）。
      * 结果等于 v1.x * v2.y - v1.y * v2.x。
-     * 返回值为有向面积，正数表示逆时针旋转，负数表示顺时针。
-     *
-     * @param vec1 第一个向量（至少含有两个元素，取前两个）
-     * @param vec2 第二个向量（至少含有两个元素，取前两个）
-     * @return 长度为1的 float[]，包含叉积标量值
-     * @throws IllegalArgumentException 如果任一向量长度小于 2
      */
     public static float[] cross2(float[] vec1, float[] vec2) {
-        if (vec1.length < 2 || vec2.length < 2) {
-            throw new IllegalArgumentException("二维叉积要求向量长度至少为 2，但收到 " + vec1.length + " 和 " + vec2.length);
+        return cross2(vec1, vec2, new float[1]);
+    }
+
+    public static float[] cross2(float[] v1, float[] v2, float[] out) {
+        if (v1.length < 2 || v2.length < 2) {
+            throw new IllegalArgumentException("二维叉积要求向量长度至少为 2");
         }
-        float scalar = vec1[0] * vec2[1] - vec1[1] * vec2[0];
-        return new float[]{scalar};
+        requireMinLen(out, 1, "out");
+        out[0] = v1[0] * v2[1] - v1[1] * v2[0];
+        return out;
+    }
+
+    /** 向量长度 */
+    public static float length(float[] v) {
+        float sum = 0f;
+        for (float val : v) sum += val * val;
+        return (float) Math.sqrt(sum);
+    }
+
+    /** 归一化，返回新数组 */
+    public static float[] normalize(float[] v) {
+        return normalize(v, new float[v.length]);
+    }
+
+    public static float[] normalize(float[] v, float[] out) {
+        requireMinLen(out, v.length, "out");
+        float sum = 0f;
+        for (float val : v) sum += val * val;
+        float len = (float) Math.sqrt(sum);
+        if (len < 1e-12f) throw new ArithmeticException("零向量无法归一化");
+        float inv = 1f / len;
+        for (int i = 0; i < v.length; i++) out[i] = v[i] * inv;
+        return out;
+    }
+
+    /** 两个向量之间的距离 */
+    public static float distance(float[] a, float[] b) {
+        if (a.length != b.length) throw new IllegalArgumentException("向量长度不一致");
+        float sum = 0f;
+        for (int i = 0; i < a.length; i++) {
+            float d = a[i] - b[i];
+            sum += d * d;
+        }
+        return (float) Math.sqrt(sum);
+    }
+
+    /** 向量线性插值 */
+    public static float[] lerp(float[] a, float[] b, float t) {
+        return lerp(a, b, t, new float[a.length]);
+    }
+
+    public static float[] lerp(float[] a, float[] b, float t, float[] out) {
+        if (a.length != b.length) throw new IllegalArgumentException("向量长度不一致");
+        requireMinLen(out, a.length, "out");
+        for (int i = 0; i < a.length; i++) {
+            out[i] = a[i] + t * (b[i] - a[i]);
+        }
+        return out;
+    }
+
+    /** 关于法线 n 的反射向量 */
+    public static float[] reflect(float[] v, float[] n) {
+        return reflect(v, n, new float[3]);
+    }
+
+    public static float[] reflect(float[] v, float[] n, float[] out) {
+        if (v.length < 3 || n.length < 3) {
+            throw new IllegalArgumentException("向量长度至少3");
+        }
+        requireMinLen(out, 3, "out");
+        float vx = v[0], vy = v[1], vz = v[2];
+        float nx = n[0], ny = n[1], nz = n[2];
+        float d = vx * nx + vy * ny + vz * nz;
+        out[0] = vx - 2f * d * nx;
+        out[1] = vy - 2f * d * ny;
+        out[2] = vz - 2f * d * nz;
+        return out;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 四元数构造
+    // ═══════════════════════════════════════════════════════════
+
+    /** 返回单位四元数 (0, 0, 0, 1)，表示无旋转 */
+    public static float[] quat() {
+        return quat(new float[4]);
+    }
+
+    public static float[] quat(float[] out) {
+        requireMinLen(out, 4, "out");
+        out[0] = 0f; out[1] = 0f; out[2] = 0f; out[3] = 1f;
+        return out;
+    }
+
+    /**
+     * 构造四元数 (x, y, z, w)，通常 w 为实部。
+     * 调用者需自行归一化。
+     */
+    public static float[] quat(float x, float y, float z, float w) {
+        return quat(x, y, z, w, new float[4]);
+    }
+
+    public static float[] quat(float x, float y, float z, float w, float[] out) {
+        requireMinLen(out, 4, "out");
+        out[0] = x; out[1] = y; out[2] = z; out[3] = w;
+        return out;
+    }
+
+    /**
+     * 从旋转轴和角度构造四元数（轴角表示）。
+     *
+     * @param axis  单位旋转轴（三维向量）
+     * @param angle 旋转角度（弧度）
+     * @return 四元数 (x, y, z, w)
+     */
+    public static float[] quatFromAxisAngle(float[] axis, float angle) {
+        return quatFromAxisAngle(axis, angle, new float[4]);
+    }
+
+    public static float[] quatFromAxisAngle(float[] axis, float angle, float[] out) {
+        if (axis.length < 3) throw new IllegalArgumentException("轴向量长度至少为 3");
+        requireMinLen(out, 4, "out");
+        float half = angle * 0.5f;
+        float s = (float) Math.sin(half);
+        float c = (float) Math.cos(half);
+        out[0] = axis[0] * s;
+        out[1] = axis[1] * s;
+        out[2] = axis[2] * s;
+        out[3] = c;
+        return out;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 四元数运算
+    // ═══════════════════════════════════════════════════════════
+
+    /** 四元数乘法 q1 * q2 */
+    public static float[] quatMul(float[] q1, float[] q2) {
+        return quatMul(q1, q2, new float[4]);
+    }
+
+    public static float[] quatMul(float[] q1, float[] q2, float[] out) {
+        if (q1.length < 4 || q2.length < 4) {
+            throw new IllegalArgumentException("四元数长度至少4");
+        }
+        requireMinLen(out, 4, "out");
+        float x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
+        float x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];
+        out[0] = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
+        out[1] = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
+        out[2] = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
+        out[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
+        return out;
+    }
+
+    /** 四元数共轭 */
+    public static float[] quatConjugate(float[] q) {
+        return quatConjugate(q, new float[4]);
+    }
+
+    public static float[] quatConjugate(float[] q, float[] out) {
+        if (q.length < 4) throw new IllegalArgumentException("四元数长度至少4");
+        requireMinLen(out, 4, "out");
+        out[0] = -q[0];
+        out[1] = -q[1];
+        out[2] = -q[2];
+        out[3] =  q[3];
+        return out;
+    }
+
+    /** 四元数归一化 */
+    public static float[] quatNormalize(float[] q) {
+        return quatNormalize(q, new float[4]);
+    }
+
+    public static float[] quatNormalize(float[] q, float[] out) {
+        if (q.length < 4) throw new IllegalArgumentException("四元数长度至少4");
+        requireMinLen(out, 4, "out");
+        float norm = (float) Math.sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+        if (norm < 1e-12f) throw new ArithmeticException("四元数模为零");
+        float inv = 1f / norm;
+        out[0] = q[0] * inv;
+        out[1] = q[1] * inv;
+        out[2] = q[2] * inv;
+        out[3] = q[3] * inv;
+        return out;
+    }
+
+    /** 用四元数旋转三维向量 */
+    public static float[] quatRotateVec3(float[] q, float[] v) {
+        return quatRotateVec3(q, v, new float[3]);
+    }
+
+    public static float[] quatRotateVec3(float[] q, float[] v, float[] out) {
+        if (q.length < 4 || v.length < 3) {
+            throw new IllegalArgumentException("四元数长度至少4，向量长度至少3");
+        }
+        requireMinLen(out, 3, "out");
+        float x = v[0], y = v[1], z = v[2];
+        float qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+        float ix = qw * x + qy * z - qz * y;
+        float iy = qw * y + qz * x - qx * z;
+        float iz = qw * z + qx * y - qy * x;
+        float iw = -qx * x - qy * y - qz * z;
+        out[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+        out[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+        out[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+        return out;
+    }
+
+    /** 四元数球面插值 */
+    public static float[] quatSlerp(float[] q1, float[] q2, float t) {
+        return quatSlerp(q1, q2, t, new float[4]);
+    }
+
+    public static float[] quatSlerp(float[] q1, float[] q2, float t, float[] out) {
+        if (q1.length < 4 || q2.length < 4) {
+            throw new IllegalArgumentException("四元数长度至少4");
+        }
+        requireMinLen(out, 4, "out");
+
+        float n1 = (float) Math.sqrt(q1[0]*q1[0] + q1[1]*q1[1] + q1[2]*q1[2] + q1[3]*q1[3]);
+        float n2 = (float) Math.sqrt(q2[0]*q2[0] + q2[1]*q2[1] + q2[2]*q2[2] + q2[3]*q2[3]);
+        if (n1 < 1e-12f || n2 < 1e-12f) throw new ArithmeticException("四元数模为零");
+        float i1 = 1f / n1, i2 = 1f / n2;
+        float x1 = q1[0]*i1, y1 = q1[1]*i1, z1 = q1[2]*i1, w1 = q1[3]*i1;
+        float x2 = q2[0]*i2, y2 = q2[1]*i2, z2 = q2[2]*i2, w2 = q2[3]*i2;
+
+        float dot = x1*x2 + y1*y2 + z1*z2 + w1*w2;
+        if (dot < 0f) {
+            x2 = -x2; y2 = -y2; z2 = -z2; w2 = -w2;
+            dot = -dot;
+        }
+        dot = Math.min(1f, Math.max(-1f, dot));
+        float theta = (float) Math.acos(dot);
+        float sinTheta = (float) Math.sin(theta);
+
+        if (sinTheta < 1e-12f) {
+            out[0] = (1f - t) * x1 + t * x2;
+            out[1] = (1f - t) * y1 + t * y2;
+            out[2] = (1f - t) * z1 + t * z2;
+            out[3] = (1f - t) * w1 + t * w2;
+            return out;
+        }
+
+        float wA = (float) Math.sin((1f - t) * theta) / sinTheta;
+        float wB = (float) Math.sin(t * theta) / sinTheta;
+        out[0] = wA * x1 + wB * x2;
+        out[1] = wA * y1 + wB * y2;
+        out[2] = wA * z1 + wB * z2;
+        out[3] = wA * w1 + wB * w2;
+        return out;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -367,20 +601,19 @@ public final class KMath {
 
     /**
      * 构造一个 4x4 矩阵，显式指定 16 个元素（列优先顺序）。
-     * <p>
-     * 参数顺序依次为：第0列4个元素，第1列4个元素，第2列4个元素，第3列4个元素。
+     *
+     * <p>参数顺序依次为：第0列4个元素，第1列4个元素，第2列4个元素，第3列4个元素。
      * 每个列中的元素按行 0→3 排列。
-     * <p>
-     * 例如，矩阵：
+     *
+     * <p>例如，矩阵：
      * <pre>
      * [ a00  a01  a02  a03 ]
      * [ a10  a11  a12  a13 ]
      * [ a20  a21  a22  a23 ]
      * [ a30  a31  a32  a33 ]
      * </pre>
-     * 按列优先存储为 [a00, a10, a20, a30, a01, a11, a21, a31, a02, a12, a22, a32, a03, a13, a23, a33]。
-     *
-     * @return 包含 16 个 float 的数组（列优先存储）
+     * 按列优先存储为
+     * [a00, a10, a20, a30, a01, a11, a21, a31, a02, a12, a22, a32, a03, a13, a23, a33]。
      */
     public static float[] mat4(
             float m00, float m10, float m20, float m30,
@@ -394,6 +627,20 @@ public final class KMath {
                 m02, m12, m22, m32,
                 m03, m13, m23, m33
         };
+    }
+
+    /** 4x4 单位矩阵 */
+    public static float[] mat4Identity() {
+        return mat4Identity(new float[16]);
+    }
+
+    public static float[] mat4Identity(float[] out) {
+        requireMinLen(out, 16, "out");
+        out[0]=1f;  out[1]=0f;  out[2]=0f;  out[3]=0f;
+        out[4]=0f;  out[5]=1f;  out[6]=0f;  out[7]=0f;
+        out[8]=0f;  out[9]=0f;  out[10]=1f; out[11]=0f;
+        out[12]=0f; out[13]=0f; out[14]=0f; out[15]=1f;
+        return out;
     }
 
     @Deprecated
@@ -411,16 +658,19 @@ public final class KMath {
      * @throws ArithmeticException     如果矩阵奇异（行列式接近零）
      */
     public static float[] mat4Inv(float[] mat) {
-        if (mat.length < 16) {
-            throw new IllegalArgumentException("矩阵长度必须至少为 16");
-        }
+        return mat4Inv(mat, new float[16]);
+    }
 
-        // 从池中借用一个长度为 9 的临时数组（用于 3x3 余子式）
+    public static float[] mat4Inv(float[] mat, float[] out) {
+        if (mat.length < 16) throw new IllegalArgumentException("矩阵长度必须至少为 16");
+        requireMinLen(out, 16, "out");
+        if (out == mat) {
+            throw new IllegalArgumentException("mat4Inv 的 out 不能与输入矩阵相同");
+        }
         FloatsHolder holder = PoolManagers.floats().getHolder();
         FloatsPool pool = holder.getPool(9);
         float[] minor = pool.acquire();
         try {
-            // 计算行列式（按第一行展开）
             float det = 0.0f;
             for (int j = 0; j < 4; j++) {
                 det += mat[j * 4] * cofactor4(mat, 0, j, minor);
@@ -428,23 +678,14 @@ public final class KMath {
             if (Math.abs(det) < 1e-12f) {
                 throw new ArithmeticException("矩阵奇异，无法求逆（行列式接近零）");
             }
-
-            // 计算伴随矩阵（列优先存储）
-            float[] adj = new float[16];
+            float invDet = 1.0f / det;
             for (int col = 0; col < 4; col++) {
                 for (int row = 0; row < 4; row++) {
-                    adj[col * 4 + row] = cofactor4(mat, row, col, minor);
+                    out[col * 4 + row] = cofactor4(mat, row, col, minor) * invDet;
                 }
             }
-
-            // 逆矩阵 = adj / det
-            float[] inv = new float[16];
-            for (int i = 0; i < 16; i++) {
-                inv[i] = adj[i] / det;
-            }
-            return inv;
+            return out;
         } finally {
-            // 归还临时数组到池中
             pool.release(minor);
         }
     }
@@ -472,428 +713,312 @@ public final class KMath {
         return ((row + col) % 2 == 0) ? detMinor : -detMinor;
     }
 
-    /**
-     * 计算 3x3 矩阵的行列式（行优先存储）
-     */
+    /** 计算 3x3 矩阵的行列式（行优先存储） */
     private static float det3(float[] m) {
         return m[0] * (m[4] * m[8] - m[5] * m[7])
                 - m[1] * (m[3] * m[8] - m[5] * m[6])
                 + m[2] * (m[3] * m[7] - m[4] * m[6]);
     }
 
-    /**
-     * 4x4 矩阵乘法：result = a * b（列优先）
-     */
+    /** 4x4 矩阵乘法：result = a * b（列优先） */
     public static float[] mat4Mul(float[] a, float[] b) {
+        return mat4Mul(a, b, new float[16]);
+    }
+
+    public static float[] mat4Mul(float[] a, float[] b, float[] out) {
         if (a.length < 16 || b.length < 16) {
             throw new IllegalArgumentException("矩阵长度必须至少为 16");
         }
-        float[] result = new float[16];
+        requireMinLen(out, 16, "out");
         for (int col = 0; col < 4; col++) {
             for (int row = 0; row < 4; row++) {
                 float sum = 0f;
                 for (int k = 0; k < 4; k++) {
                     sum += a[k * 4 + row] * b[col * 4 + k];
                 }
-                result[col * 4 + row] = sum;
+                out[col * 4 + row] = sum;
             }
         }
-        return result;
+        return out;
     }
 
-    /**
-     * 4x4 矩阵乘以 4D 向量（列向量），返回 4D 向量。
-     */
+    /** 4x4 矩阵乘以 4D 向量（列向量） */
     public static float[] mat4MulVec4(float[] m, float[] v) {
+        return mat4MulVec4(m, v, new float[4]);
+    }
+
+    public static float[] mat4MulVec4(float[] m, float[] v, float[] out) {
         if (m.length < 16 || v.length < 4) {
             throw new IllegalArgumentException("矩阵长度至少16，向量长度至少4");
         }
-        float[] result = new float[4];
+        requireMinLen(out, 4, "out");
+        // 先把 v 读入局部变量，允许 out == v
+        float v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
         for (int row = 0; row < 4; row++) {
-            float sum = 0f;
-            for (int col = 0; col < 4; col++) {
-                sum += m[col * 4 + row] * v[col];
-            }
-            result[row] = sum;
+            out[row] = m[row] * v0
+                    + m[4 + row] * v1
+                    + m[8 + row] * v2
+                    + m[12 + row] * v3;
         }
-        return result;
+        return out;
     }
 
-    /**
-     * 4x4 矩阵乘以 3D 向量（隐式 w=1），返回 3D 向量（执行透视除法）。
-     */
+    /** 4x4 矩阵乘以 3D 点（隐式 w=1），并执行透视除法 */
     public static float[] mat4MulVec3(float[] m, float[] v) {
+        return mat4MulVec3(m, v, new float[3]);
+    }
+
+    public static float[] mat4MulVec3(float[] m, float[] v, float[] out) {
         if (m.length < 16 || v.length < 3) {
             throw new IllegalArgumentException("矩阵长度至少16，向量长度至少3");
         }
-        // 计算齐次坐标
-        float x = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12];
-        float y = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13];
-        float z = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14];
-        float w = m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15];
-        if (Math.abs(w) < 1e-12f) {
-            throw new ArithmeticException("齐次坐标 w 接近零，无法投影");
-        }
+        requireMinLen(out, 3, "out");
+        float v0 = v[0], v1 = v[1], v2 = v[2];
+        float x = m[0] * v0 + m[4] * v1 + m[8]  * v2 + m[12];
+        float y = m[1] * v0 + m[5] * v1 + m[9]  * v2 + m[13];
+        float z = m[2] * v0 + m[6] * v1 + m[10] * v2 + m[14];
+        float w = m[3] * v0 + m[7] * v1 + m[11] * v2 + m[15];
+        if (Math.abs(w) < 1e-12f) throw new ArithmeticException("齐次坐标 w 接近零，无法投影");
         float invW = 1f / w;
-        return new float[]{x * invW, y * invW, z * invW};
+        out[0] = x * invW;
+        out[1] = y * invW;
+        out[2] = z * invW;
+        return out;
     }
 
-    public static float[] mat4Identity() {
-        return new float[]{
-                1f, 0f, 0f, 0f,
-                0f, 1f, 0f, 0f,
-                0f, 0f, 1f, 0f,
-                0f, 0f, 0f, 1f
-        };
+    /** 4x4 矩阵乘以 3D 方向向量（隐式 w=0） */
+    public static float[] mat4MulDir3(float[] m, float[] v) {
+        return mat4MulDir3(m, v, new float[3]);
     }
 
-    public static float[] mat4TranslateMatrix(float tx, float ty, float tz) {
-        return new float[]{
-                1f, 0f, 0f, 0f,
-                0f, 1f, 0f, 0f,
-                0f, 0f, 1f, 0f,
-                tx, ty, tz, 1f
-        };
-    }
-
-    public static float[] mat4ScaleMatrix(float sx, float sy, float sz) {
-        return new float[]{
-                sx, 0f, 0f, 0f,
-                0f, sy, 0f, 0f,
-                0f, 0f, sz, 0f,
-                0f, 0f, 0f, 1f
-        };
-    }
-
-    public static float[] mat4RotateXMatrix(float angle) {
-        float c = (float) Math.cos(angle);
-        float s = (float) Math.sin(angle);
-        return new float[]{
-                1f, 0f, 0f, 0f,
-                0f, c,  s,  0f,
-                0f, -s, c,  0f,
-                0f, 0f, 0f, 1f
-        };
-    }
-
-    public static float[] mat4RotateYMatrix(float angle) {
-        float c = (float) Math.cos(angle);
-        float s = (float) Math.sin(angle);
-        return new float[]{
-                c,  0f, -s, 0f,
-                0f, 1f, 0f, 0f,
-                s,  0f, c,  0f,
-                0f, 0f, 0f, 1f
-        };
-    }
-
-    public static float[] mat4RotateZMatrix(float angle) {
-        float c = (float) Math.cos(angle);
-        float s = (float) Math.sin(angle);
-        return new float[]{
-                c,  s,  0f, 0f,
-                -s, c,  0f, 0f,
-                0f, 0f, 1f, 0f,
-                0f, 0f, 0f, 1f
-        };
-    }
-
-    public static float[] mat4RotateMatrix(float angle, float[] axis) {
-        if (axis.length < 3) {
-            throw new IllegalArgumentException("轴向量长度至少为3");
+    public static float[] mat4MulDir3(float[] m, float[] v, float[] out) {
+        if (m.length < 16 || v.length < 3) {
+            throw new IllegalArgumentException("矩阵长度至少16，向量长度至少3");
         }
+        requireMinLen(out, 3, "out");
+        float v0 = v[0], v1 = v[1], v2 = v[2];
+        out[0] = m[0] * v0 + m[4] * v1 + m[8]  * v2;
+        out[1] = m[1] * v0 + m[5] * v1 + m[9]  * v2;
+        out[2] = m[2] * v0 + m[6] * v1 + m[10] * v2;
+        return out;
+    }
+
+    /** 4x4 矩阵转置 */
+    public static float[] mat4Transpose(float[] m) {
+        return mat4Transpose(m, new float[16]);
+    }
+
+    public static float[] mat4Transpose(float[] m, float[] out) {
+        if (m.length < 16) throw new IllegalArgumentException("矩阵长度至少16");
+        requireMinLen(out, 16, "out");
+        if (out == m) {
+            // 原地转置：只交换上三角
+            for (int row = 0; row < 4; row++) {
+                for (int col = row + 1; col < 4; col++) {
+                    float t = out[row * 4 + col];
+                    out[row * 4 + col] = out[col * 4 + row];
+                    out[col * 4 + row] = t;
+                }
+            }
+            return out;
+        }
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                out[row * 4 + col] = m[col * 4 + row];
+            }
+        }
+        return out;
+    }
+
+    /** 4x4 平移矩阵 */
+    public static float[] mat4TranslateMatrix(float tx, float ty, float tz) {
+        return mat4TranslateMatrix(tx, ty, tz, new float[16]);
+    }
+
+    public static float[] mat4TranslateMatrix(float tx, float ty, float tz, float[] out) {
+        mat4Identity(out);
+        out[12] = tx; out[13] = ty; out[14] = tz;
+        return out;
+    }
+
+    /** 4x4 缩放矩阵 */
+    public static float[] mat4ScaleMatrix(float sx, float sy, float sz) {
+        return mat4ScaleMatrix(sx, sy, sz, new float[16]);
+    }
+
+    public static float[] mat4ScaleMatrix(float sx, float sy, float sz, float[] out) {
+        mat4Identity(out);
+        out[0] = sx; out[5] = sy; out[10] = sz;
+        return out;
+    }
+
+    /** 绕 X 轴旋转矩阵 */
+    public static float[] mat4RotateXMatrix(float angle) {
+        return mat4RotateXMatrix(angle, new float[16]);
+    }
+
+    public static float[] mat4RotateXMatrix(float angle, float[] out) {
+        float c = (float) Math.cos(angle);
+        float s = (float) Math.sin(angle);
+        mat4Identity(out);
+        out[5] = c;  out[6] = s;
+        out[9] = -s; out[10] = c;
+        return out;
+    }
+
+    /** 绕 Y 轴旋转矩阵 */
+    public static float[] mat4RotateYMatrix(float angle) {
+        return mat4RotateYMatrix(angle, new float[16]);
+    }
+
+    public static float[] mat4RotateYMatrix(float angle, float[] out) {
+        float c = (float) Math.cos(angle);
+        float s = (float) Math.sin(angle);
+        mat4Identity(out);
+        out[0] = c;  out[2] = -s;
+        out[8] = s;  out[10] = c;
+        return out;
+    }
+
+    /** 绕 Z 轴旋转矩阵 */
+    public static float[] mat4RotateZMatrix(float angle) {
+        return mat4RotateZMatrix(angle, new float[16]);
+    }
+
+    public static float[] mat4RotateZMatrix(float angle, float[] out) {
+        float c = (float) Math.cos(angle);
+        float s = (float) Math.sin(angle);
+        mat4Identity(out);
+        out[0] = c;  out[1] = s;
+        out[4] = -s; out[5] = c;
+        return out;
+    }
+
+    /** 绕任意轴旋转矩阵 */
+    public static float[] mat4RotateMatrix(float angle, float[] axis) {
+        return mat4RotateMatrix(angle, axis, new float[16]);
+    }
+
+    public static float[] mat4RotateMatrix(float angle, float[] axis, float[] out) {
+        if (axis.length < 3) throw new IllegalArgumentException("轴向量长度至少为3");
+        requireMinLen(out, 16, "out");
         float x = axis[0], y = axis[1], z = axis[2];
         float len = (float) Math.sqrt(x*x + y*y + z*z);
-        if (len < 1e-12f) {
-            throw new IllegalArgumentException("轴向量不能为零");
-        }
-        float invLen = 1f / len;
-        x *= invLen; y *= invLen; z *= invLen;
-
+        if (len < 1e-12f) throw new IllegalArgumentException("轴向量不能为零");
+        float inv = 1f / len;
+        x *= inv; y *= inv; z *= inv;
         float c = (float) Math.cos(angle);
         float s = (float) Math.sin(angle);
         float t = 1f - c;
 
-        // 罗德里格旋转矩阵
-        return new float[]{
-                t*x*x + c,     t*x*y + s*z,   t*x*z - s*y,   0f,
-                t*x*y - s*z,   t*y*y + c,     t*y*z + s*x,   0f,
-                t*x*z + s*y,   t*y*z - s*x,   t*z*z + c,     0f,
-                0f, 0f, 0f, 1f
-        };
+        out[0]  = t*x*x + c;     out[1]  = t*x*y + s*z;   out[2]  = t*x*z - s*y;   out[3]  = 0f;
+        out[4]  = t*x*y - s*z;   out[5]  = t*y*y + c;     out[6]  = t*y*z + s*x;   out[7]  = 0f;
+        out[8]  = t*x*z + s*y;   out[9]  = t*y*z - s*x;   out[10] = t*z*z + c;     out[11] = 0f;
+        out[12] = 0f;            out[13] = 0f;            out[14] = 0f;            out[15] = 1f;
+        return out;
     }
 
-    /**
-     * 构建一个透视投影矩阵（列优先），右手坐标系，相机看向 -Z。
-     */
+    /** 透视投影矩阵（列优先），右手坐标系，相机看向 -Z */
     public static float[] mat4PerspectiveMatrix(float fovDeg, float aspect, float near, float far) {
+        return mat4PerspectiveMatrix(fovDeg, aspect, near, far, new float[16]);
+    }
+
+    public static float[] mat4PerspectiveMatrix(float fovDeg, float aspect, float near, float far, float[] out) {
+        requireMinLen(out, 16, "out");
         float f = 1.0f / (float) Math.tan(Math.toRadians(fovDeg) * 0.5f);
         float nf = 1.0f / (near - far);
-        float[] m = new float[16];
-        m[0] = f / aspect;
-        m[1] = 0.0f;
-        m[2] = 0.0f;
-        m[3] = 0.0f;
 
-        m[4] = 0.0f;
-        m[5] = f;
-        m[6] = 0.0f;
-        m[7] = 0.0f;
-
-        m[8] = 0.0f;
-        m[9] = 0.0f;
-        m[10] = (far + near) * nf;
-        m[11] = -1.0f;
-
-        m[12] = 0.0f;
-        m[13] = 0.0f;
-        m[14] = (2.0f * far * near) * nf;
-        m[15] = 0.0f;
-        return m;
+        out[0] = f / aspect; out[1] = 0f; out[2] = 0f;                 out[3] = 0f;
+        out[4] = 0f;         out[5] = f;  out[6] = 0f;                 out[7] = 0f;
+        out[8] = 0f;         out[9] = 0f; out[10] = (far + near) * nf; out[11] = -1.0f;
+        out[12] = 0f;        out[13] = 0f; out[14] = (2.0f * far * near) * nf; out[15] = 0f;
+        return out;
     }
 
-    /**
-     * 构建一个正交投影矩阵（列优先）。
-     */
+    /** 正交投影矩阵（列优先） */
     public static float[] mat4OrthoMatrix(float left, float right, float bottom, float top,
                                           float near, float far) {
-        float[] m = new float[16];
-        m[0] = 2.0f / (right - left);
-        m[1] = 0.0f;
-        m[2] = 0.0f;
-        m[3] = 0.0f;
-
-        m[4] = 0.0f;
-        m[5] = 2.0f / (top - bottom);
-        m[6] = 0.0f;
-        m[7] = 0.0f;
-
-        m[8] = 0.0f;
-        m[9] = 0.0f;
-        m[10] = -2.0f / (far - near);
-        m[11] = 0.0f;
-
-        m[12] = -(right + left) / (right - left);
-        m[13] = -(top + bottom) / (top - bottom);
-        m[14] = -(far + near) / (far - near);
-        m[15] = 1.0f;
-        return m;
+        return mat4OrthoMatrix(left, right, bottom, top, near, far, new float[16]);
     }
 
-    /**
-     * 构建一个视图矩阵（世界空间 → 相机空间），右手坐标系，相机看向 -Z。
-     */
+    public static float[] mat4OrthoMatrix(float left, float right, float bottom, float top,
+                                          float near, float far, float[] out) {
+        requireMinLen(out, 16, "out");
+        out[0] = 2.0f / (right - left); out[1] = 0f; out[2] = 0f; out[3] = 0f;
+        out[4] = 0f; out[5] = 2.0f / (top - bottom); out[6] = 0f; out[7] = 0f;
+        out[8] = 0f; out[9] = 0f; out[10] = -2.0f / (far - near); out[11] = 0f;
+        out[12] = -(right + left) / (right - left);
+        out[13] = -(top + bottom) / (top - bottom);
+        out[14] = -(far + near) / (far - near);
+        out[15] = 1.0f;
+        return out;
+    }
+
+    /** 视图矩阵（世界空间 → 相机空间），右手坐标系，相机看向 -Z */
     public static float[] mat4LookAtMatrix(float eyeX, float eyeY, float eyeZ,
                                            float centerX, float centerY, float centerZ,
                                            float upX, float upY, float upZ) {
-        // 前向量 f = normalize(center - eye)  → 对应相机局部 -Z
+        return mat4LookAtMatrix(eyeX, eyeY, eyeZ, centerX, centerY, centerZ,
+                upX, upY, upZ, new float[16]);
+    }
+
+    public static float[] mat4LookAtMatrix(float eyeX, float eyeY, float eyeZ,
+                                           float centerX, float centerY, float centerZ,
+                                           float upX, float upY, float upZ,
+                                           float[] out) {
+        requireMinLen(out, 16, "out");
         float fx = centerX - eyeX;
         float fy = centerY - eyeY;
         float fz = centerZ - eyeZ;
         float fLen = (float) Math.sqrt(fx*fx + fy*fy + fz*fz);
-        if (fLen < 1e-12f) return mat4Identity();
+        if (fLen < 1e-12f) return mat4Identity(out);
         fx /= fLen; fy /= fLen; fz /= fLen;
 
-        // 右向量 s = normalize(f × up)
         float sx = fy * upZ - fz * upY;
         float sy = fz * upX - fx * upZ;
         float sz = fx * upY - fy * upX;
         float sLen = (float) Math.sqrt(sx*sx + sy*sy + sz*sz);
         if (sLen < 1e-12f) {
-            // up 与 forward 平行，自动选取备用 up
-            float[] altUp = (Math.abs(fy) > 0.99f)
-                    ? new float[]{1f, 0f, 0f}
-                    : new float[]{0f, 1f, 0f};
-            sx = altUp[1] * fz - altUp[2] * fy;
-            sy = altUp[2] * fx - altUp[0] * fz;
-            sz = altUp[0] * fy - altUp[1] * fx;
+            // 不分配 altUp，用标量分支
+            float auxX, auxY, auxZ;
+            if (Math.abs(fy) > 0.99f) { auxX = 1f; auxY = 0f; auxZ = 0f; }
+            else                       { auxX = 0f; auxY = 1f; auxZ = 0f; }
+            sx = auxY * fz - auxZ * fy;
+            sy = auxZ * fx - auxX * fz;
+            sz = auxX * fy - auxY * fx;
             sLen = (float) Math.sqrt(sx*sx + sy*sy + sz*sz);
         }
         sx /= sLen; sy /= sLen; sz /= sLen;
 
-        // 上向量 u = s × f
         float ux = sy * fz - sz * fy;
         float uy = sz * fx - sx * fz;
         float uz = sx * fy - sy * fx;
 
-        // 构建列优先矩阵
-        float[] m = new float[16];
-        m[0]  = sx;  m[1]  = ux;  m[2]  = -fx; m[3]  = 0f;
-        m[4]  = sy;  m[5]  = uy;  m[6]  = -fy; m[7]  = 0f;
-        m[8]  = sz;  m[9]  = uz;  m[10] = -fz; m[11] = 0f;
-        m[12] = -(sx*eyeX + sy*eyeY + sz*eyeZ);
-        m[13] = -(ux*eyeX + uy*eyeY + uz*eyeZ);
-        m[14] = (fx*eyeX + fy*eyeY + fz*eyeZ);
-        m[15] = 1f;
-        return m;
-    }
-
-    public static float[] mat4Transpose(float[] m) {
-        if (m.length < 16) throw new IllegalArgumentException("矩阵长度至少16");
-        float[] result = new float[16];
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 4; col++) {
-                result[row * 4 + col] = m[col * 4 + row];
-            }
-        }
-        return result;
-    }
-
-
-
-    // ═══════════════════════════════════════════════════════════
-    // 四元数运算
-    // ═══════════════════════════════════════════════════════════
-
-    public static float[] quatMul(float[] q1, float[] q2) {
-        if (q1.length < 4 || q2.length < 4) {
-            throw new IllegalArgumentException("四元数长度至少4");
-        }
-        float x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
-        float x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];
-        return new float[]{
-                w1*x2 + x1*w2 + y1*z2 - z1*y2,
-                w1*y2 - x1*z2 + y1*w2 + z1*x2,
-                w1*z2 + x1*y2 - y1*x2 + z1*w2,
-                w1*w2 - x1*x2 - y1*y2 - z1*z2
-        };
-    }
-
-    public static float[] quatConjugate(float[] q) {
-        if (q.length < 4) throw new IllegalArgumentException("四元数长度至少4");
-        return new float[]{-q[0], -q[1], -q[2], q[3]};
-    }
-
-    public static float[] quatNormalize(float[] q) {
-        if (q.length < 4) throw new IllegalArgumentException("四元数长度至少4");
-        float norm = (float) Math.sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
-        if (norm < 1e-12f) {
-            throw new ArithmeticException("四元数模为零");
-        }
-        float invNorm = 1f / norm;
-        return new float[]{q[0]*invNorm, q[1]*invNorm, q[2]*invNorm, q[3]*invNorm};
-    }
-
-    public static float[] quatRotateVec3(float[] q, float[] v) {
-        if (q.length < 4 || v.length < 3) {
-            throw new IllegalArgumentException("四元数长度至少4，向量长度至少3");
-        }
-        float x = v[0], y = v[1], z = v[2];
-        float qx = q[0], qy = q[1], qz = q[2], qw = q[3];
-        float ix = qw * x + qy * z - qz * y;
-        float iy = qw * y + qz * x - qx * z;
-        float iz = qw * z + qx * y - qy * x;
-        float iw = -qx * x - qy * y - qz * z;
-        float rx = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-        float ry = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-        float rz = iz * qw + iw * -qz + ix * -qy - iy * -qx;
-        return new float[]{rx, ry, rz};
-    }
-
-    public static float[] quatSlerp(float[] q1, float[] q2, float t) {
-        if (q1.length < 4 || q2.length < 4) {
-            throw new IllegalArgumentException("四元数长度至少4");
-        }
-        float[] q1n = quatNormalize(q1);
-        float[] q2n = quatNormalize(q2);
-        float dot = q1n[0]*q2n[0] + q1n[1]*q2n[1] + q1n[2]*q2n[2] + q1n[3]*q2n[3];
-        if (dot < 0f) {
-            q2n = new float[]{-q2n[0], -q2n[1], -q2n[2], -q2n[3]};
-            dot = -dot;
-        }
-        dot = Math.max(-1f, Math.min(1f, dot));
-        float theta = (float) Math.acos(dot);
-        float sinTheta = (float) Math.sin(theta);
-        if (sinTheta < 1e-12f) {
-            return new float[]{
-                    (1f-t)*q1n[0] + t*q2n[0],
-                    (1f-t)*q1n[1] + t*q2n[1],
-                    (1f-t)*q1n[2] + t*q2n[2],
-                    (1f-t)*q1n[3] + t*q2n[3]
-            };
-        }
-        float w1 = (float) Math.sin((1f-t) * theta) / sinTheta;
-        float w2 = (float) Math.sin(t * theta) / sinTheta;
-        return new float[]{
-                w1*q1n[0] + w2*q2n[0],
-                w1*q1n[1] + w2*q2n[1],
-                w1*q1n[2] + w2*q2n[2],
-                w1*q1n[3] + w2*q2n[3]
-        };
+        out[0]  = sx;  out[1]  = ux;  out[2]  = -fx; out[3]  = 0f;
+        out[4]  = sy;  out[5]  = uy;  out[6]  = -fy; out[7]  = 0f;
+        out[8]  = sz;  out[9]  = uz;  out[10] = -fz; out[11] = 0f;
+        out[12] = -(sx*eyeX + sy*eyeY + sz*eyeZ);
+        out[13] = -(ux*eyeX + uy*eyeY + uz*eyeZ);
+        out[14] =  (fx*eyeX + fy*eyeY + fz*eyeZ);
+        out[15] = 1f;
+        return out;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 向量运算
+    // 2D 仿射矩阵（6 元素，float）
+    // 布局：[a b c d tx ty]，列向量约定 p' = M · p
     // ═══════════════════════════════════════════════════════════
 
-    public static float length(float[] v) {
-        float sum = 0f;
-        for (float val : v) sum += val * val;
-        return (float) Math.sqrt(sum);
-    }
-
-    public static float[] normalize(float[] v) {
-        float len = length(v);
-        if (len < 1e-12f) throw new ArithmeticException("零向量无法归一化");
-        float invLen = 1f / len;
-        float[] result = new float[v.length];
-        for (int i = 0; i < v.length; i++) result[i] = v[i] * invLen;
-        return result;
-    }
-
-    public static float distance(float[] a, float[] b) {
-        if (a.length != b.length) throw new IllegalArgumentException("向量长度不一致");
-        float sum = 0f;
-        for (int i = 0; i < a.length; i++) {
-            float d = a[i] - b[i];
-            sum += d * d;
-        }
-        return (float) Math.sqrt(sum);
-    }
-
-    public static float[] lerp(float[] a, float[] b, float t) {
-        if (a.length != b.length) throw new IllegalArgumentException("向量长度不一致");
-        float[] result = new float[a.length];
-        for (int i = 0; i < a.length; i++) {
-            result[i] = a[i] + t * (b[i] - a[i]);
-        }
-        return result;
-    }
-
-    public static float[] reflect(float[] v, float[] n) {
-        if (v.length < 3 || n.length < 3) {
-            throw new IllegalArgumentException("向量长度至少3");
-        }
-        float dot = v[0]*n[0] + v[1]*n[1] + v[2]*n[2];
-        return new float[]{
-                v[0] - 2f * dot * n[0],
-                v[1] - 2f * dot * n[1],
-                v[2] - 2f * dot * n[2]
-        };
-    }
-
-    /**
-     * 4x4 矩阵乘以 3D 方向向量（隐式 w=0），返回变换后的方向向量。
-     */
-    public static float[] mat4MulDir3(float[] m, float[] v) {
-        if (m.length < 16 || v.length < 3) {
-            throw new IllegalArgumentException("矩阵长度至少16，向量长度至少3");
-        }
-        float x = m[0] * v[0] + m[4] * v[1] + m[8] * v[2];
-        float y = m[1] * v[0] + m[5] * v[1] + m[9] * v[2];
-        float z = m[2] * v[0] + m[6] * v[1] + m[10] * v[2];
-        return new float[]{x, y, z};
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // 2D 仿射矩阵（6 元素）
-    // ═══════════════════════════════════════════════════════════
-
-    /**
-     * 返回 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0]。
-     */
+    /** 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0] */
     public static float[] mat2dIdentity() {
-        return new float[]{1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+        return mat2dIdentity(new float[6]);
+    }
+
+    public static float[] mat2dIdentity(float[] out) {
+        requireMinLen(out, 6, "out");
+        out[0] = 1f; out[1] = 0f; out[2] = 0f;
+        out[3] = 1f; out[4] = 0f; out[5] = 0f;
+        return out;
     }
 
     public static boolean mat2dIsIdentity(float[] m) {
@@ -907,64 +1032,54 @@ public final class KMath {
     }
 
     /**
-     * 从 2D 仿射矩阵中提取 X 轴缩放因子。
-     *
-     * @deprecated 名字有歧义（与加法无关），已由 {@link #mat2dScaleX} 取代。
-     */
-    @Deprecated
-    public static float add(float[] m) {
-        return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // 2D 仿射矩阵 —— 绕点变换（float）
-    // ═══════════════════════════════════════════════════════════
-
-    /**
      * 绕 (cx, cy) 旋转 angle 弧度的 2D 仿射矩阵。
      * 等价于 T(cx, cy) · R(angle) · T(-cx, -cy)。
-     * 布局：[a b c d tx ty]，列向量约定 p' = M · p。
      */
     public static float[] mat2dRotateMatrix(float cx, float cy, float angle) {
+        return mat2dRotateMatrix(cx, cy, angle, new float[6]);
+    }
+
+    public static float[] mat2dRotateMatrix(float cx, float cy, float angle, float[] out) {
+        requireMinLen(out, 6, "out");
         float c = (float) Math.cos(angle);
         float s = (float) Math.sin(angle);
-        return new float[]{
-                c,  s,  -s, c,
-                cx * (1f - c) + s * cy,
-                cy * (1f - c) - s * cx
-        };
+        out[0] = c;  out[1] = s;  out[2] = -s; out[3] = c;
+        out[4] = cx * (1f - c) + s * cy;
+        out[5] = cy * (1f - c) - s * cx;
+        return out;
     }
 
-    /**
-     * 以 (cx, cy) 为中心缩放 (sx, sy) 的 2D 仿射矩阵。
-     */
+    /** 以 (cx, cy) 为中心缩放 (sx, sy) 的 2D 仿射矩阵 */
     public static float[] mat2dScaleMatrix(float cx, float cy, float sx, float sy) {
-        return new float[]{
-                sx, 0f, 0f, sy,
-                cx * (1f - sx),
-                cy * (1f - sy)
-        };
+        return mat2dScaleMatrix(cx, cy, sx, sy, new float[6]);
     }
 
-    /**
-     * 沿经过 (px, py)、方向 (dx, dy) 的直线镜像的 2D 仿射矩阵。
-     * 方向向量必须非零。
-     */
+    public static float[] mat2dScaleMatrix(float cx, float cy, float sx, float sy, float[] out) {
+        requireMinLen(out, 6, "out");
+        out[0] = sx; out[1] = 0f; out[2] = 0f; out[3] = sy;
+        out[4] = cx * (1f - sx);
+        out[5] = cy * (1f - sy);
+        return out;
+    }
+
+    /** 沿经过 (px, py)、方向 (dx, dy) 的直线镜像的 2D 仿射矩阵 */
     public static float[] mat2dMirrorMatrix(float px, float py, float dx, float dy) {
+        return mat2dMirrorMatrix(px, py, dx, dy, new float[6]);
+    }
+
+    public static float[] mat2dMirrorMatrix(float px, float py, float dx, float dy, float[] out) {
+        requireMinLen(out, 6, "out");
         float len = (float) Math.hypot(dx, dy);
-        if (len < 1e-12f) {
-            throw new IllegalArgumentException("mirror axis direction must be non-zero");
-        }
+        if (len < 1e-12f) throw new IllegalArgumentException("mirror axis direction must be non-zero");
         float nx = -dy / len;
         float ny =  dx / len;
-        float a  = 1f - 2f * nx * nx;
-        float b  = -2f * nx * ny;
-        float d  = 1f - 2f * ny * ny;
-        return new float[]{
-                a, b, b, d,
-                px - (a * px + b * py),
-                py - (b * px + d * py)
-        };
+        float a = 1f - 2f * nx * nx;
+        float b = -2f * nx * ny;
+        float d = 1f - 2f * ny * ny;
+        out[0] = a; out[1] = b; out[2] = b; out[3] = d;
+        out[4] = px - (a * px + b * py);
+        out[5] = py - (b * px + d * py);
+        return out;
     }
 
     /**
@@ -972,16 +1087,206 @@ public final class KMath {
      * kx 影响 Y 位移（y' 受 x 影响），ky 影响 X 位移（x' 受 y 影响）。
      */
     public static float[] mat2dSkewMatrix(float cx, float cy, float kx, float ky) {
-        return new float[]{
-                1f, kx, ky, 1f,
-                -ky * cy,
-                -kx * cx
-        };
+        return mat2dSkewMatrix(cx, cy, kx, ky, new float[6]);
+    }
+
+    public static float[] mat2dSkewMatrix(float cx, float cy, float kx, float ky, float[] out) {
+        requireMinLen(out, 6, "out");
+        out[0] = 1f;  out[1] = kx; out[2] = ky; out[3] = 1f;
+        out[4] = -ky * cy;
+        out[5] = -kx * cx;
+        return out;
+    }
+
+    /**
+     * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：p' = M * p）。
+     * 变换顺序：先缩放，再旋转，最后平移。
+     */
+    public static float[] mat2dCompose(float x, float y,
+                                       float scaleX, float scaleY,
+                                       float rotation) {
+        return mat2dCompose(x, y, scaleX, scaleY, rotation, new float[6]);
+    }
+
+    public static float[] mat2dCompose(float x, float y, float scaleX, float scaleY,
+                                       float rotation, float[] out) {
+        requireMinLen(out, 6, "out");
+        float cosR = (float) Math.cos(rotation);
+        float sinR = (float) Math.sin(rotation);
+        out[0] = scaleX * cosR;
+        out[1] = scaleX * sinR;
+        out[2] = scaleY * (-sinR);
+        out[3] = scaleY * cosR;
+        out[4] = x;
+        out[5] = y;
+        return out;
+    }
+
+    /**
+     * 构造 2D 仿射变换的逆矩阵（世界 → 本地）。
+     * 缩放为 0 时使用 1e-6 避免除零异常（近似逆，仅用于避免崩溃）。
+     */
+    public static float[] mat2dComposeInverse(float x, float y,
+                                              float scaleX, float scaleY,
+                                              float rotation) {
+        return mat2dComposeInverse(x, y, scaleX, scaleY, rotation, new float[6]);
+    }
+
+    public static float[] mat2dComposeInverse(float x, float y, float scaleX, float scaleY,
+                                              float rotation, float[] out) {
+        requireMinLen(out, 6, "out");
+        float cosR = (float) Math.cos(rotation);
+        float sinR = (float) Math.sin(rotation);
+        float invSX = 1.0f / (scaleX == 0f ? 1e-6f : scaleX);
+        float invSY = 1.0f / (scaleY == 0f ? 1e-6f : scaleY);
+        out[0] = cosR * invSX;
+        out[1] = -sinR * invSY;
+        out[2] = sinR * invSX;
+        out[3] = cosR * invSY;
+        out[4] = -(cosR * x + sinR * y) * invSX;
+        out[5] =  (sinR * x - cosR * y) * invSY;
+        return out;
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 X 轴缩放因子。
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
+     */
+    public static float mat2dScaleX(float[] m) {
+        return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 Y 轴缩放因子。
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleY = sqrt(c² + d²)
+     */
+    public static float mat2dScaleY(float[] m) {
+        return (float) Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 X 轴缩放因子。
+     *
+     * @deprecated 名字有歧义（与加法无关），已由 {@link #mat2dScaleX} 取代。
+     */
+    @Deprecated
+    public static float add(float[] m) {
+        return mat2dScaleX(m);
+    }
+
+    /** 两个 2D 仿射矩阵相乘：result = a * b（列向量约定，先 b 后 a） */
+    public static float[] mat2dMul(float[] a, float[] b) {
+        return mat2dMul(a, b, new float[6]);
+    }
+
+    public static float[] mat2dMul(float[] a, float[] b, float[] out) {
+        if (a.length < 6 || b.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        requireMinLen(out, 6, "out");
+        float a1 = a[0], b1 = a[1], c1 = a[2], d1 = a[3], tx1 = a[4], ty1 = a[5];
+        float a2 = b[0], b2 = b[1], c2 = b[2], d2 = b[3], tx2 = b[4], ty2 = b[5];
+        out[0] = a1 * a2 + c1 * b2;
+        out[1] = b1 * a2 + d1 * b2;
+        out[2] = a1 * c2 + c1 * d2;
+        out[3] = b1 * c2 + d1 * d2;
+        out[4] = a1 * tx2 + c1 * ty2 + tx1;
+        out[5] = b1 * tx2 + d1 * ty2 + ty1;
+        return out;
+    }
+
+    /**
+     * 计算 2D 仿射矩阵的逆矩阵。
+     * 若矩阵奇异（行列式接近 0），返回 null。
+     */
+    public static float[] mat2dInv(float[] m) {
+        float[] out = new float[6];
+        return mat2dInv(m, out) ? out : null;
+    }
+
+    /**
+     * 计算 2D 仿射矩阵的逆并写入 out。
+     *
+     * @return true 表示成功写入 out；false 表示矩阵奇异，out 未被修改。
+     */
+    public static boolean mat2dInv(float[] m, float[] out) {
+        if (m.length < 6) throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        requireMinLen(out, 6, "out");
+        float a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
+        double det = (double) a * d - (double) b * c;
+        if (Math.abs(det) < 1e-10) return false;
+        double invDet = 1.0 / det;
+        out[0] = (float) (d * invDet);
+        out[1] = (float) (-b * invDet);
+        out[2] = (float) (-c * invDet);
+        out[3] = (float) (a * invDet);
+        out[4] = (float) ((c * ty - d * tx) * invDet);
+        out[5] = (float) ((b * tx - a * ty) * invDet);
+        return true;
+    }
+
+    /** 用 2D 仿射矩阵变换点 (x, y) */
+    public static float[] mat2dTransformPoint(float[] m, float x, float y) {
+        return mat2dTransformPoint(m, x, y, new float[2]);
+    }
+
+    public static float[] mat2dTransformPoint(float[] m, float x, float y, float[] out) {
+        if (m.length < 6) throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        requireMinLen(out, 2, "out");
+        float a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
+        out[0] = a * x + c * y + tx;
+        out[1] = b * x + d * y + ty;
+        return out;
+    }
+
+    /** 将 2D 仿射矩阵扩展为 4x4 列优先矩阵（z=0，w=1） */
+    public static float[] mat2dToMat4(float[] m2) {
+        return mat2dToMat4(m2, new float[16]);
+    }
+
+    public static float[] mat2dToMat4(float[] m2, float[] out) {
+        if (m2.length < 6) throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        requireMinLen(out, 16, "out");
+        out[0]  = m2[0]; out[1]  = m2[1]; out[2]  = 0f; out[3]  = 0f;
+        out[4]  = m2[2]; out[5]  = m2[3]; out[6]  = 0f; out[7]  = 0f;
+        out[8]  = 0f;    out[9]  = 0f;    out[10] = 1f; out[11] = 0f;
+        out[12] = m2[4]; out[13] = m2[5]; out[14] = 0f; out[15] = 1f;
+        return out;
+    }
+
+    /** 将 4x4 矩阵（列优先）转换为 2D 仿射矩阵 */
+    public static float[] mat4ToMat2d(float[] m4) {
+        if (m4.length < 16) return null;
+        return mat4ToMat2d(m4, new float[6]);
+    }
+
+    public static float[] mat4ToMat2d(float[] m4, float[] out) {
+        requireMinLen(out, 6, "out");
+        if (m4.length < 16) throw new IllegalArgumentException("矩阵长度必须至少为 16");
+        out[0] = m4[0];  out[1] = m4[1];
+        out[2] = m4[4];  out[3] = m4[5];
+        out[4] = m4[12]; out[5] = m4[13];
+        return out;
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 2D 仿射矩阵 —— 绕点变换（double）
+    // 2D 仿射矩阵（6 元素，double）
     // ═══════════════════════════════════════════════════════════
+
+    /** 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0]（double） */
+    public static double[] mat2dIdentityD() {
+        return new double[]{1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+    }
+
+    public static boolean mat2dIsIdentityD(double[] m) {
+        if (m == null || m.length != 6) return false;
+        return Math.abs(m[0] - 1.0) < 1e-9 &&
+                Math.abs(m[1]) < 1e-9 &&
+                Math.abs(m[2]) < 1e-9 &&
+                Math.abs(m[3] - 1.0) < 1e-9 &&
+                Math.abs(m[4]) < 1e-9 &&
+                Math.abs(m[5]) < 1e-9;
+    }
 
     public static double[] mat2dRotateMatrixD(double cx, double cy, double angle) {
         double c = Math.cos(angle);
@@ -1027,184 +1332,6 @@ public final class KMath {
     }
 
     /**
-     * 从 2D 仿射矩阵中提取 X 轴缩放因子。
-     * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
-     */
-    public static float mat2dScaleX(float[] m) {
-        return (float) Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-    }
-
-    /**
-     * 从 2D 仿射矩阵中提取 Y 轴缩放因子。
-     * 矩阵格式：[a, b, c, d, tx, ty]，scaleY = sqrt(c² + d²)
-     */
-    public static float mat2dScaleY(float[] m) {
-        return (float) Math.sqrt(m[2] * m[2] + m[3] * m[3]);
-    }
-
-    /**
-     * 从平移、缩放、旋转构造 2D 仿射矩阵（列向量约定：p' = M * p）。
-     * 变换顺序：先缩放，再旋转，最后平移。
-     */
-    public static float[] mat2dCompose(float x, float y,
-                                       float scaleX, float scaleY,
-                                       float rotation) {
-        float cosR = (float) Math.cos(rotation);
-        float sinR = (float) Math.sin(rotation);
-        return new float[]{
-                scaleX * cosR,          // a
-                scaleX * sinR,          // b
-                scaleY * (-sinR),       // c
-                scaleY * cosR,          // d
-                x,                      // tx
-                y                       // ty
-        };
-    }
-
-    /**
-     * 两个 2D 仿射矩阵相乘：result = a * b（列向量约定，先 b 后 a）。
-     */
-    public static float[] mat2dMul(float[] a, float[] b) {
-        if (a.length < 6 || b.length < 6) {
-            throw new IllegalArgumentException("矩阵长度必须至少为 6");
-        }
-        float a1 = a[0], b1 = a[1], c1 = a[2], d1 = a[3], tx1 = a[4], ty1 = a[5];
-        float a2 = b[0], b2 = b[1], c2 = b[2], d2 = b[3], tx2 = b[4], ty2 = b[5];
-        return new float[]{
-                a1 * a2 + c1 * b2,          // a
-                b1 * a2 + d1 * b2,          // b
-                a1 * c2 + c1 * d2,          // c
-                b1 * c2 + d1 * d2,          // d
-                a1 * tx2 + c1 * ty2 + tx1,  // tx
-                b1 * tx2 + d1 * ty2 + ty1   // ty
-        };
-    }
-
-    /**
-     * 计算 2D 仿射矩阵的逆矩阵。
-     * 若矩阵奇异（行列式接近 0），返回 null。
-     */
-    public static float[] mat2dInv(float[] m) {
-        if (m.length < 6) {
-            throw new IllegalArgumentException("矩阵长度必须至少为 6");
-        }
-        float a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
-        double det = (double) a * d - (double) b * c;
-        if (Math.abs(det) < 1e-10) {
-            return null;
-        }
-        double invDet = 1.0 / det;
-        float aInv = (float) (d * invDet);
-        float bInv = (float) (-b * invDet);
-        float cInv = (float) (-c * invDet);
-        float dInv = (float) (a * invDet);
-        float txInv = (float) ((c * ty - d * tx) * invDet);
-        float tyInv = (float) ((b * tx - a * ty) * invDet);
-        return new float[]{aInv, bInv, cInv, dInv, txInv, tyInv};
-    }
-
-    /**
-     * 用 2D 仿射矩阵变换点 (x, y)，返回 [x', y']。
-     */
-    public static float[] mat2dTransformPoint(float[] m, float x, float y) {
-        if (m.length < 6) {
-            throw new IllegalArgumentException("矩阵长度必须至少为 6");
-        }
-        float a = m[0], b = m[1], c = m[2], d = m[3], tx = m[4], ty = m[5];
-        return new float[]{
-                a * x + c * y + tx,
-                b * x + d * y + ty
-        };
-    }
-
-
-    /**
-     * 将 4x4 矩阵（列优先）转换为 2D 仿射矩阵。
-     */
-    public static float[] mat4ToMat2d(float[] m4) {
-        if (m4.length < 16) return null;
-        return new float[]{
-                m4[0], m4[1],  // a, b
-                m4[4], m4[5],  // c, d
-                m4[12], m4[13] // tx, ty
-        };
-    }
-
-    /**
-     * 将 2D 仿射矩阵扩展为 4x4 列优先矩阵（z=0，w=1）。
-     */
-    public static float[] mat2dToMat4(float[] m2) {
-        if (m2.length < 6) {
-            throw new IllegalArgumentException("矩阵长度必须至少为 6");
-        }
-        float a = m2[0], b = m2[1], c = m2[2], d = m2[3], tx = m2[4], ty = m2[5];
-        return new float[]{
-                a, b, 0f, 0f,
-                c, d, 0f, 0f,
-                0f, 0f, 1f, 0f,
-                tx, ty, 0f, 1f
-        };
-    }
-
-    /**
-     * 构造 2D 仿射变换的逆矩阵（世界 → 本地）。
-     * 缩放为 0 时使用 1e-6 避免除零异常（近似逆，仅用于避免崩溃）。
-     */
-    public static float[] mat2dComposeInverse(float x, float y,
-                                              float scaleX, float scaleY,
-                                              float rotation) {
-        float cosR = (float) Math.cos(rotation);
-        float sinR = (float) Math.sin(rotation);
-        float invSX = 1.0f / (scaleX == 0f ? 1e-6f : scaleX);
-        float invSY = 1.0f / (scaleY == 0f ? 1e-6f : scaleY);
-        return new float[]{
-                cosR * invSX,
-                -sinR * invSY,
-                sinR * invSX,
-                cosR * invSY,
-                -(cosR * x + sinR * y) * invSX,
-                (sinR * x - cosR * y) * invSY
-        };
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // 2D 仿射矩阵（6 元素）—— double 版本
-    // ═══════════════════════════════════════════════════════════
-
-    /**
-     * 返回 2D 仿射单位矩阵 [1, 0, 0, 1, 0, 0]（double）。
-     */
-    public static double[] mat2dIdentityD() {
-        return new double[]{1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
-    }
-
-    public static boolean mat2dIsIdentityD(double[] m) {
-        if (m == null || m.length != 6) return false;
-        return Math.abs(m[0] - 1.0) < 1e-9 &&
-                Math.abs(m[1]) < 1e-9 &&
-                Math.abs(m[2]) < 1e-9 &&
-                Math.abs(m[3] - 1.0) < 1e-9 &&
-                Math.abs(m[4]) < 1e-9 &&
-                Math.abs(m[5]) < 1e-9;
-    }
-
-    /**
-     * 从 2D 仿射矩阵中提取 X 轴缩放因子（double）。
-     * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
-     */
-    public static double mat2dScaleXD(double[] m) {
-        return Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-    }
-
-    /**
-     * 从 2D 仿射矩阵中提取 Y 轴缩放因子（double）。
-     * 矩阵格式：[a, b, c, d, tx, ty]，scaleY = sqrt(c² + d²)
-     */
-    public static double mat2dScaleYD(double[] m) {
-        return Math.sqrt(m[2] * m[2] + m[3] * m[3]);
-    }
-
-    /**
      * 从平移、缩放、旋转构造 2D 仿射矩阵（double，列向量约定：p' = M * p）。
      * 变换顺序：先缩放，再旋转，最后平移。
      */
@@ -1224,8 +1351,43 @@ public final class KMath {
     }
 
     /**
-     * 两个 2D 仿射矩阵相乘（double）：result = a * b（列向量约定，先 b 后 a）。
+     * 构造 2D 仿射变换的逆矩阵（double，世界 → 本地）。
+     * 缩放为 0 时使用 1e-12 避免除零异常（近似逆，仅用于避免崩溃）。
      */
+    public static double[] mat2dComposeInverseD(double x, double y,
+                                                double scaleX, double scaleY,
+                                                double rotation) {
+        double cosR = Math.cos(rotation);
+        double sinR = Math.sin(rotation);
+        double invSX = 1.0 / (scaleX == 0.0 ? 1e-12 : scaleX);
+        double invSY = 1.0 / (scaleY == 0.0 ? 1e-12 : scaleY);
+        return new double[]{
+                cosR * invSX,                       // a
+                -sinR * invSY,                      // b
+                sinR * invSX,                       // c
+                cosR * invSY,                       // d
+                -(cosR * x + sinR * y) * invSX,     // tx
+                (sinR * x - cosR * y) * invSY       // ty
+        };
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 X 轴缩放因子（double）。
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleX = sqrt(a² + b²)
+     */
+    public static double mat2dScaleXD(double[] m) {
+        return Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+    }
+
+    /**
+     * 从 2D 仿射矩阵中提取 Y 轴缩放因子（double）。
+     * 矩阵格式：[a, b, c, d, tx, ty]，scaleY = sqrt(c² + d²)
+     */
+    public static double mat2dScaleYD(double[] m) {
+        return Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+    }
+
+    /** 两个 2D 仿射矩阵相乘（double）：result = a * b（列向量约定，先 b 后 a） */
     public static double[] mat2dMulD(double[] a, double[] b) {
         if (a.length < 6 || b.length < 6) {
             throw new IllegalArgumentException("矩阵长度必须至少为 6");
@@ -1266,9 +1428,7 @@ public final class KMath {
         };
     }
 
-    /**
-     * 用 2D 仿射矩阵变换点 (x, y)，返回 [x', y']（double）。
-     */
+    /** 用 2D 仿射矩阵变换点 (x, y)（double） */
     public static double[] mat2dTransformPointD(double[] m, double x, double y) {
         if (m.length < 6) {
             throw new IllegalArgumentException("矩阵长度必须至少为 6");
@@ -1281,7 +1441,7 @@ public final class KMath {
     }
 
     /**
-     * 用 2D 仿射矩阵变换方向向量 (dx, dy)，返回 [dx', dy']（double）。
+     * 用 2D 仿射矩阵变换方向向量 (dx, dy)（double）。
      * 忽略平移部分——方向向量不受平移影响。
      */
     public static double[] mat2dTransformDirectionD(double[] m, double dx, double dy) {
@@ -1295,9 +1455,21 @@ public final class KMath {
         };
     }
 
-    /**
-     * 将 4x4 矩阵（列优先，double）转换为 2D 仿射矩阵。
-     */
+    /** 将 2D 仿射矩阵扩展为 4x4 列优先矩阵（double，z=0，w=1） */
+    public static double[] mat2dToMat4D(double[] m2) {
+        if (m2.length < 6) {
+            throw new IllegalArgumentException("矩阵长度必须至少为 6");
+        }
+        double a = m2[0], b = m2[1], c = m2[2], d = m2[3], tx = m2[4], ty = m2[5];
+        return new double[]{
+                a, b, 0.0, 0.0,     // col0
+                c, d, 0.0, 0.0,     // col1
+                0.0, 0.0, 1.0, 0.0, // col2
+                tx, ty, 0.0, 1.0    // col3
+        };
+    }
+
+    /** 将 4x4 矩阵（列优先，double）转换为 2D 仿射矩阵 */
     public static double[] mat4ToMat2dD(double[] m4) {
         if (m4.length < 16) return null;
         return new double[]{
@@ -1307,69 +1479,39 @@ public final class KMath {
         };
     }
 
-    /**
-     * 将 2D 仿射矩阵扩展为 4x4 列优先矩阵（double，z=0，w=1）。
-     */
-    public static double[] mat2dToMat4D(double[] m2) {
-        if (m2.length < 6) {
-            throw new IllegalArgumentException("矩阵长度必须至少为 6");
-        }
-        double a = m2[0], b = m2[1], c = m2[2], d = m2[3], tx = m2[4], ty = m2[5];
-        return new double[]{
-                a, b, 0.0, 0.0,   // col0
-                c, d, 0.0, 0.0,   // col1
-                0.0, 0.0, 1.0, 0.0, // col2
-                tx, ty, 0.0, 1.0  // col3
-        };
-    }
-
-    /**
-     * 构造 2D 仿射变换的逆矩阵（double，世界 → 本地）。
-     * 缩放为 0 时使用 1e-12 避免除零异常（近似逆，仅用于避免崩溃）。
-     */
-    public static double[] mat2dComposeInverseD(double x, double y,
-                                                double scaleX, double scaleY,
-                                                double rotation) {
-        double cosR = Math.cos(rotation);
-        double sinR = Math.sin(rotation);
-        double invSX = 1.0 / (scaleX == 0.0 ? 1e-12 : scaleX);
-        double invSY = 1.0 / (scaleY == 0.0 ? 1e-12 : scaleY);
-        return new double[]{
-                cosR * invSX,                       // a
-                -sinR * invSY,                      // b
-                sinR * invSX,                       // c
-                cosR * invSY,                       // d
-                -(cosR * x + sinR * y) * invSX,     // tx
-                (sinR * x - cosR * y) * invSY       // ty
-        };
-    }
-
     // ═══════════════════════════════════════════════════════════
-    // 线段相交
+    // 线段相交（float）
     // ═══════════════════════════════════════════════════════════
 
     public static class SegmentInterceptionResult {
         private final boolean intercepted;
         private final float x;
         private final float y;
+
         private SegmentInterceptionResult(boolean intercepted, float x, float y) {
             this.intercepted = intercepted;
             this.x = x;
             this.y = y;
         }
+
         public static SegmentInterceptionResult hit(float x, float y) {
             return new SegmentInterceptionResult(true, x, y);
         }
+
         private static final SegmentInterceptionResult MISS = new SegmentInterceptionResult(false, 0, 0);
+
         public static SegmentInterceptionResult miss() {
             return MISS;
         }
+
         public boolean isIntercepted() {
             return intercepted;
         }
+
         public float getX() {
             return x;
         }
+
         public float getY() {
             return y;
         }
@@ -1420,6 +1562,60 @@ public final class KMath {
                 Math.abs((px - ax) - t*dx) < 1e-6f &&
                 Math.abs((py - ay) - t*dy) < 1e-6f;
     }
+
+    public static class LineIntersectionResult {
+        private final boolean intersected;
+        private final float x;
+        private final float y;
+
+        private LineIntersectionResult(boolean intersected, float x1, float y1) {
+            this.intersected = intersected;
+            this.x = x1;
+            this.y = y1;
+        }
+
+        public boolean isIntersected() {
+            return intersected;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public static LineIntersectionResult hit(float x, float y) {
+            return new LineIntersectionResult(true, x, y);
+        }
+
+        private static final LineIntersectionResult MISS = new LineIntersectionResult(false, 0, 0);
+
+        public static LineIntersectionResult miss() {
+            return MISS;
+        }
+    }
+
+    /**
+     * 两条参数直线求交：
+     *   L1: P1 + t * d1
+     *   L2: P2 + s * d2
+     */
+    public static LineIntersectionResult lineIntersection(
+            float px1, float py1, float dx1, float dy1,
+            float px2, float py2, float dx2, float dy2) {
+        float denom = dx1 * dy2 - dy1 * dx2;
+        if (Math.abs(denom) < 1e-12) return LineIntersectionResult.miss();
+        float t = ((px2 - px1) * dy2 - (py2 - py1) * dx2) / denom;
+        float hitX = px1 + t * dx1;
+        float hitY = py1 + t * dy1;
+        return LineIntersectionResult.hit(hitX, hitY);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 线段相交（double）
+    // ═══════════════════════════════════════════════════════════
 
     public static class SegmentIntersectionResultD {
         private final boolean intersected;
@@ -1507,6 +1703,7 @@ public final class KMath {
         private final boolean intersected;
         private final double x;
         private final double y;
+
         private LineIntersectionResultD(boolean intersected, double x1, double y1) {
             this.intersected = intersected;
             this.x = x1;
@@ -1528,7 +1725,9 @@ public final class KMath {
         public static LineIntersectionResultD hit(double x, double y) {
             return new LineIntersectionResultD(true, x, y);
         }
+
         private static final LineIntersectionResultD MISS = new LineIntersectionResultD(false, 0, 0);
+
         public static LineIntersectionResultD miss() {
             return MISS;
         }
@@ -1539,7 +1738,7 @@ public final class KMath {
      *   L1: P1 + t * d1
      *   L2: P2 + s * d2
      */
-    public LineIntersectionResultD lineIntersectionD(
+    public static LineIntersectionResultD lineIntersectionD(
             double px1, double py1, double dx1, double dy1,
             double px2, double py2, double dx2, double dy2) {
         double denom = dx1 * dy2 - dy1 * dx2;
@@ -1548,54 +1747,5 @@ public final class KMath {
         double hitX = px1 + t * dx1;
         double hitY = py1 + t * dy1;
         return LineIntersectionResultD.hit(hitX, hitY);
-    }
-
-
-
-    public static class LineIntersectionResult {
-        private final boolean intersected;
-        private final float x;
-        private final float y;
-        private LineIntersectionResult(boolean intersected, float x1, float y1) {
-            this.intersected = intersected;
-            this.x = x1;
-            this.y = y1;
-        }
-
-        public boolean isIntersected() {
-            return intersected;
-        }
-
-        public double getX() {
-            return x;
-        }
-
-        public double getY() {
-            return y;
-        }
-
-        public static LineIntersectionResult hit(float x, float y) {
-            return new LineIntersectionResult(true, x, y);
-        }
-        private static final LineIntersectionResult MISS = new LineIntersectionResult(false, 0, 0);
-        public static LineIntersectionResult miss() {
-            return MISS;
-        }
-    }
-
-    /**
-     * 两条参数直线求交：
-     *   L1: P1 + t * d1
-     *   L2: P2 + s * d2
-     */
-    public LineIntersectionResult lineIntersection(
-            float px1, float py1, float dx1, float dy1,
-            float px2, float py2, float dx2, float dy2) {
-        float denom = dx1 * dy2 - dy1 * dx2;
-        if (Math.abs(denom) < 1e-12) return LineIntersectionResult.miss();
-        float t = ((px2 - px1) * dy2 - (py2 - py1) * dx2) / denom;
-        float hitX = px1 + t * dx1;
-        float hitY = py1 + t * dy1;
-        return LineIntersectionResult.hit(hitX, hitY);
     }
 }
