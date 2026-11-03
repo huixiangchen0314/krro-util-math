@@ -763,7 +763,20 @@ public final class KMath {
         return out;
     }
 
-    /** 4x4 矩阵乘以 3D 点（隐式 w=1），并执行透视除法 */
+    /**
+     * mat4 矩阵是否是仿射变换
+     */
+    public static boolean mat4IsAffine(float[] m) {
+        if (m.length < 16) {
+            throw new IllegalArgumentException("矩阵长度至少16");
+        }
+        // 列主序下：m[3], m[7], m[11], m[15] 是矩阵最后一行
+        return Math.abs(m[3])  <= 1e-6
+                && Math.abs(m[7])  <= 1e-6
+                && Math.abs(m[11]) <= 1e-6
+                && Math.abs(m[15] - 1F) <= 1e-6;
+    }
+
     public static float[] mat4MulVec3(float[] m, float[] v) {
         return mat4MulVec3(m, v, new float[3]);
     }
@@ -783,6 +796,36 @@ public final class KMath {
         out[0] = x * invW;
         out[1] = y * invW;
         out[2] = z * invW;
+        return out;
+    }
+    public static float[] mat4MulVec3Affine(float[] m, float[] v) {
+        return mat4MulVec3Affine(m, v, new float[3]);
+    }
+
+    /**
+     * 用仿射 4×4 矩阵变换 3D 点：隐含输入 (v0, v1, v2, 1)，
+     * 不做齐次除法（w 恒为 1）。
+     *
+     * <p>调用者需保证 m 是仿射矩阵（最后一行 [0,0,0,1]）。
+     * 如果 m 含投影，结果无意义，请改用 {@link #mat4MulVec3}。
+
+     * 4x4 仿射矩阵乘以 3D 方向向量（隐式 w=1） */
+    public static float[] mat4MulVec3Affine(float[] m, float[] v, float[] out) {
+        if (m.length < 16 || v.length < 3) {
+            throw new IllegalArgumentException("矩阵长度至少16，向量长度至少3");
+        }
+        requireMinLen(out, 3, "out");
+
+        // 先取出，避免 out == v 时被覆盖
+        float v0 = v[0];
+        float v1 = v[1];
+        float v2 = v[2];
+
+        // 列主序：m[0..3] 第1列, m[4..7] 第2列, m[8..11] 第3列, m[12..15] 第4列
+        out[0] = m[0] * v0 + m[4] * v1 + m[8]  * v2 + m[12];
+        out[1] = m[1] * v0 + m[5] * v1 + m[9]  * v2 + m[13];
+        out[2] = m[2] * v0 + m[6] * v1 + m[10] * v2 + m[14];
+
         return out;
     }
 
