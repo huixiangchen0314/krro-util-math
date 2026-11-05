@@ -681,7 +681,9 @@ public final class KMath {
             float invDet = 1.0f / det;
             for (int col = 0; col < 4; col++) {
                 for (int row = 0; row < 4; row++) {
-                    out[col * 4 + row] = cofactor4(mat, row, col, minor) * invDet;
+                    // 伴随矩阵 Adj[row][col] = C[col][row]——必须转置
+                    // 列主序：adj[col*4+row] = Adj[row][col]
+                    out[col * 4 + row] = cofactor4(mat, col, row, minor) * invDet;
                 }
             }
             return out;
