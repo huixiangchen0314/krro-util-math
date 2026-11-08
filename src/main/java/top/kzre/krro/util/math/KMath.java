@@ -3,12 +3,9 @@ package top.kzre.krro.util.math;
 import top.kzre.krro.util.pool.*;
 
 /**
- * Krro 数学工具类，不做类型抽象，约定 float[] 布局.
- *
- * <p>double 版本方法统一使用大写 {@code D} 后缀（如 {@code minD} / {@code lerpD}）。
- * 旧的小写 {@code d} 后缀方法已标记 {@link Deprecated}，仅作兼容保留。
- *
- * <p>约定：带 {@code out} 参数的重载包含实际计算逻辑，非 out 重载仅分配结果数组并委托。
+ * <p><b>Krro 数学工具类</b>
+ * <br>
+ * 主要是 标量，向量，矩阵，简单相交的工具</p>
  */
 public final class KMath {
 
